@@ -1,4 +1,4 @@
-export type Sport = 'MLB' | 'NBA' | 'NFL' | 'NHL' | 'golf' | 'pokemon' | 'soccer' | 'other';
+export type Sport = 'MLB' | 'NBA' | 'NFL' | 'NHL' | 'golf' | 'pokemon' | 'soccer' | 'other' | 'unknown';
 export type PSARecommendation = 'yes' | 'no' | 'maybe';
 export type Confidence = 'high' | 'medium' | 'low';
 export type ScanType = 'multi' | 'single';
