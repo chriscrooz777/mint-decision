@@ -4,15 +4,23 @@ You will be shown a photograph containing 1 to 9 sports cards. For each card vis
 
 1. IDENTIFY the card: player name, card year, card set/brand, card number (if visible), sport, and manufacturer.
 2. ASSESS the visible condition briefly.
-3. ESTIMATE the raw (ungraded) market value range in USD based on current market knowledge.
+3. ESTIMATE the raw (ungraded) market value range in USD.
 4. RECOMMEND whether the card is worth submitting to PSA for professional grading: "yes", "no", or "maybe".
+
+PRICING METHODOLOGY — follow this hierarchy for value estimates:
+1. PRIMARY SOURCE: eBay completed/sold listings — this is the gold standard for actual market value. Base your estimates on what cards actually sell for, not what they are listed at.
+2. SECONDARY SOURCES: PSA Price Guide, COMC (Check Out My Cards), and major auction house results (Heritage, PWCC, Goldin).
+3. AVOID relying heavily on Beckett book values, as they tend to overstate market prices for many cards.
+4. For key rookies, HOF players, and desirable parallels/inserts, values have generally trended upward in recent years — reflect current market strength rather than historical lows.
+5. When estimating a range, target the realistic mid-market value as your center point. Do not default to the conservative floor unless the card is truly a bulk common.
+6. For junk wax era commons (non-key, non-RC), values are legitimately very low ($0.05–$0.50) — be honest about this.
 
 Guidelines for PSA recommendation:
 - "yes": Card appears to be in excellent condition AND has meaningful graded value (PSA 8+ value significantly exceeds grading cost of ~$20-50). Rookie cards, hall of famers, and key cards in great condition.
 - "no": Card is a common card with low value even graded, OR condition is poor, OR it's a known junk wax era common with massive print runs (e.g., 1989 Donruss Ken Griffey Jr. is valuable, but 1989 Donruss common players are not).
 - "maybe": Card has some value potential but condition is uncertain, or it's a borderline case where grading cost vs. potential value gain is close.
 
-Be honest and direct. Many cards from the late 80s and early 90s are worth very little even in perfect condition due to massive overproduction. Don't sugarcoat this — these collectors deserve honest assessments.
+Be honest and direct. Many cards from the late 80s and early 90s are worth very little even in perfect condition due to massive overproduction. Don't sugarcoat this — collectors deserve honest assessments. At the same time, don't undervalue cards that genuinely have market demand.
 
 For foil cards, refractors, or cards where text is hard to read due to the card design, make your best effort and note your confidence level.
 
@@ -57,7 +65,16 @@ Perform a comprehensive evaluation:
 
 6. ESTIMATE both raw value and potential graded value at the estimated PSA grade.
 
-Be precise, thorough, and honest. If the image quality makes certain aspects hard to evaluate, explicitly state that. If only the front is provided, note that the back could reveal additional issues affecting the grade.`;
+PRICING METHODOLOGY — follow this hierarchy for value estimates:
+1. PRIMARY SOURCE: eBay completed/sold listings — this is the gold standard for actual market value. Base your estimates on what cards actually sell for, not what they are listed at.
+2. SECONDARY SOURCES: PSA Price Guide and PSA Population Report data, COMC (Check Out My Cards), and major auction house results (Heritage, PWCC, Goldin).
+3. AVOID relying heavily on Beckett book values, as they tend to overstate market prices for many cards.
+4. For graded values, consider PSA population scarcity — a card with a low PSA 10 population commands a significant premium over one with thousands of 10s.
+5. For key rookies, HOF players, and desirable parallels/inserts, values have generally trended upward in recent years — reflect current market strength rather than historical lows.
+6. When estimating a range, target the realistic mid-market value as your center point. Do not default to the conservative floor unless the card is truly a bulk common.
+7. Graded value estimates should reflect the specific estimated PSA grade. A PSA 10 vs PSA 9 can represent a 2x-10x price difference for key cards — be specific about this.
+
+Be precise, thorough, and honest. If the image quality makes certain aspects hard to evaluate, explicitly state that. If only the front is provided, note that the back could reveal additional issues affecting the grade. Don't undervalue cards that genuinely have market demand, but remain honest about low-value commons.`;
 
 export function buildWhyExplanationPrompt(
   playerName: string,
