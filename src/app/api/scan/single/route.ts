@@ -1,0 +1,229 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { openai } from '@/lib/openai/client';
+import { SINGLE_CARD_SYSTEM_PROMPT } from '@/lib/openai/prompts';
+import { singleCardSchema } from '@/lib/openai/schemas';
+import { AISingleScanResponse } from '@/types/scan';
+import { getCurrentMonthYear } from '@/lib/utils/format';
+
+export const maxDuration = 60;
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { imageFront, mimeTypeFront, imageBack, mimeTypeBack } = body;
+
+    if (!imageFront || !mimeTypeFront) {
+      return NextResponse.json(
+        { error: 'Front image is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check scan usage
+    const monthYear = getCurrentMonthYear();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('tier')
+      .eq('id', user.id)
+      .single();
+
+    const tier = profile?.tier || 'free';
+    const { data: usage } = await supabase
+      .from('scan_usage')
+      .select('scan_count')
+      .eq('user_id', user.id)
+      .eq('month_year', monthYear)
+      .single();
+
+    const currentScans = usage?.scan_count || 0;
+    const limits: Record<string, number> = { free: 25, pro: 1000, premium: 5000 };
+    const scanLimit = limits[tier] || 25;
+
+    if (currentScans >= scanLimit) {
+      return NextResponse.json(
+        { error: 'Monthly scan limit reached. Upgrade your plan for more scans.' },
+        { status: 429 }
+      );
+    }
+
+    // Create scan record
+    const { data: scan, error: scanError } = await supabase
+      .from('scans')
+      .insert({
+        user_id: user.id,
+        scan_type: 'single',
+        image_front_path: `${user.id}/single/${Date.now()}_front.jpg`,
+        image_back_path: imageBack
+          ? `${user.id}/single/${Date.now()}_back.jpg`
+          : null,
+        status: 'processing',
+      })
+      .select('id')
+      .single();
+
+    if (scanError || !scan) {
+      console.error('Failed to create scan:', scanError);
+      return NextResponse.json(
+        { error: 'Failed to create scan record' },
+        { status: 500 }
+      );
+    }
+
+    // Build image content for OpenAI
+    const imageContent: Array<{
+      type: 'image_url';
+      image_url: { url: string; detail: 'high' | 'low' | 'auto' };
+    }> = [
+      {
+        type: 'image_url',
+        image_url: {
+          url: `data:${mimeTypeFront};base64,${imageFront}`,
+          detail: 'high',
+        },
+      },
+    ];
+
+    if (imageBack && mimeTypeBack) {
+      imageContent.push({
+        type: 'image_url',
+        image_url: {
+          url: `data:${mimeTypeBack};base64,${imageBack}`,
+          detail: 'high',
+        },
+      });
+    }
+
+    // Call OpenAI Vision API
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: SINGLE_CARD_SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: [
+            ...imageContent,
+            {
+              type: 'text',
+              text: imageBack
+                ? 'Here are the front and back of the card. Please provide a detailed evaluation.'
+                : 'Here is the front of the card. The back was not provided. Please evaluate what you can see and note any limitations.',
+            },
+          ],
+        },
+      ],
+      response_format: singleCardSchema,
+      max_tokens: 4096,
+      temperature: 0.2,
+    });
+
+    const aiResult: AISingleScanResponse = JSON.parse(
+      response.choices[0].message.content || '{}'
+    );
+
+    if (!aiResult.card) {
+      await supabase
+        .from('scans')
+        .update({ status: 'failed' })
+        .eq('id', scan.id);
+      return NextResponse.json(
+        { error: 'Could not evaluate the card. Please try a clearer photo.' },
+        { status: 422 }
+      );
+    }
+
+    const c = aiResult.card;
+
+    // Get next mint_id
+    const { data: nextMintId } = await supabase.rpc('next_mint_id', {
+      p_user_id: user.id,
+    });
+    const mintId = nextMintId || 1;
+
+    // Save card result
+    const { data: savedCard } = await supabase
+      .from('card_results')
+      .insert({
+        scan_id: scan.id,
+        user_id: user.id,
+        card_index: 0,
+        mint_id: mintId,
+        player_name: c.player_name,
+        card_year: c.card_year,
+        card_set: c.card_set,
+        card_number: c.card_number,
+        sport: c.sport,
+        manufacturer: c.manufacturer,
+        raw_price_low: c.raw_price_low,
+        raw_price_high: c.raw_price_high,
+        centering_score: c.centering_score,
+        corners_score: c.corners_score,
+        edges_score: c.edges_score,
+        surface_score: c.surface_score,
+        estimated_psa_grade_low: c.estimated_psa_grade_low,
+        estimated_psa_grade_high: c.estimated_psa_grade_high,
+        grading_explanation: c.grading_explanation,
+        grade_improvement_tips: c.grade_improvement_tips,
+      })
+      .select('id, mint_id')
+      .single();
+
+    // Update scan status
+    await supabase
+      .from('scans')
+      .update({
+        status: 'completed',
+        card_count: 1,
+        raw_ai_response: aiResult,
+      })
+      .eq('id', scan.id);
+
+    // Increment scan usage
+    await supabase.rpc('increment_scan_usage', {
+      p_user_id: user.id,
+      p_month_year: monthYear,
+    });
+
+    const card = {
+      id: savedCard?.id || crypto.randomUUID(),
+      mintId: savedCard?.mint_id || mintId,
+      scanId: scan.id,
+      playerName: c.player_name,
+      cardYear: c.card_year,
+      cardSet: c.card_set,
+      cardNumber: c.card_number,
+      sport: c.sport,
+      manufacturer: c.manufacturer,
+      rawPriceLow: c.raw_price_low,
+      rawPriceHigh: c.raw_price_high,
+      centering: { score: c.centering_score, notes: c.centering_notes },
+      corners: { score: c.corners_score, notes: c.corners_notes },
+      edges: { score: c.edges_score, notes: c.edges_notes },
+      surface: { score: c.surface_score, notes: c.surface_notes },
+      estimatedPsaGradeLow: c.estimated_psa_grade_low,
+      estimatedPsaGradeHigh: c.estimated_psa_grade_high,
+      gradingExplanation: c.grading_explanation,
+      gradeImprovementTips: c.grade_improvement_tips,
+      gradedValueLow: c.graded_value_low,
+      gradedValueHigh: c.graded_value_high,
+      createdAt: new Date().toISOString(),
+    };
+
+    return NextResponse.json({ scanId: scan.id, card });
+  } catch (err) {
+    console.error('Single-scan error:', err);
+    return NextResponse.json(
+      { error: 'An unexpected error occurred. Please try again.' },
+      { status: 500 }
+    );
+  }
+}
