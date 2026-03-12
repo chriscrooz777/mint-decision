@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { SingleCardResult } from '@/types/scan';
 import GradingBreakdown from './GradingBreakdown';
 import { formatPriceRange, formatGradeRange, formatMintId } from '@/lib/utils/format';
@@ -9,9 +10,10 @@ interface SingleCardResultsProps {
   card: SingleCardResult;
   onSaveToCollection?: () => void;
   isSaved?: boolean;
+  isFree?: boolean;
 }
 
-export default function SingleCardResults({ card, onSaveToCollection, isSaved }: SingleCardResultsProps) {
+export default function SingleCardResults({ card, onSaveToCollection, isSaved, isFree }: SingleCardResultsProps) {
   return (
     <div className="space-y-4">
       {/* Card Identity */}
@@ -116,8 +118,21 @@ export default function SingleCardResults({ card, onSaveToCollection, isSaved }:
         </div>
       </div>
 
-      {/* Save to Collection */}
-      {onSaveToCollection && (
+      {/* Upgrade CTA for free users */}
+      {isFree && (
+        <Link
+          href="/pricing"
+          className="block w-full bg-gradient-to-r from-primary to-blue-600 rounded-xl p-4 text-white text-center shadow-sm"
+        >
+          <p className="text-sm font-bold">Upgrade to Save Cards</p>
+          <p className="text-xs text-white/80 mt-0.5">
+            Pro members can save cards to their collection and track values over time.
+          </p>
+        </Link>
+      )}
+
+      {/* Save to Collection — paid users only */}
+      {!isFree && onSaveToCollection && (
         <button
           onClick={() => !isSaved && onSaveToCollection()}
           disabled={isSaved}

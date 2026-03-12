@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ImageUploader from '@/components/features/scan/ImageUploader';
 import ScanLoadingState from '@/components/features/scan/ScanLoadingState';
@@ -12,9 +12,35 @@ export default function MultiScanPage() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageMimeType, setImageMimeType] = useState<string | null>(null);
   const [savedCards, setSavedCards] = useState<Set<string>>(new Set());
+  const [tier, setTier] = useState<string>('free');
   const { isScanning, multiResults, gridLayout, originalImageDataUrl, error, startScan, setMultiResults, setScanError, reset } =
     useScanStore();
   const router = useRouter();
+
+  const isFree = tier === 'free';
+
+  // Clear stale results when navigating back to this page
+  useEffect(() => {
+    reset();
+    setSavedCards(new Set());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch user tier
+  useEffect(() => {
+    async function fetchTier() {
+      try {
+        const res = await fetch('/api/usage');
+        if (res.ok) {
+          const data = await res.json();
+          setTier(data.tier);
+        }
+      } catch {
+        // Default to free
+      }
+    }
+    fetchTier();
+  }, []);
 
   const handleSaveToCollection = useCallback(async (cardId: string) => {
     try {
@@ -35,6 +61,14 @@ export default function MultiScanPage() {
       alert('Failed to save card to collection.');
     }
   }, []);
+
+  const handleSaveAll = useCallback(async () => {
+    if (!multiResults) return;
+    const unsaved = multiResults.filter((c) => !savedCards.has(c.id));
+    for (const card of unsaved) {
+      await handleSaveToCollection(card.id);
+    }
+  }, [multiResults, savedCards, handleSaveToCollection]);
 
   const handleImageReady = useCallback((base64: string, mimeType: string) => {
     setImageBase64(base64);
@@ -90,8 +124,10 @@ export default function MultiScanPage() {
           cards={multiResults}
           imageDataUrl={originalImageDataUrl || undefined}
           gridLayout={gridLayout || undefined}
-          onSaveToCollection={handleSaveToCollection}
+          onSaveToCollection={isFree ? undefined : handleSaveToCollection}
+          onSaveAll={isFree ? undefined : handleSaveAll}
           savedCards={savedCards}
+          isFree={isFree}
         />
       </div>
     );

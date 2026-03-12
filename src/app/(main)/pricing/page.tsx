@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import TierCard from '@/components/features/pricing/TierCard';
 import UsageMeter from '@/components/features/pricing/UsageMeter';
+import PlanChangeModal from '@/components/features/pricing/PlanChangeModal';
 import { TIER_CONFIGS, Tier, UsageRecord } from '@/types/pricing';
 
 export default function PricingPage() {
   const [usage, setUsage] = useState<UsageRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTier, setSelectedTier] = useState<Tier | null>(null);
 
   useEffect(() => {
     async function fetchUsage() {
@@ -26,13 +28,20 @@ export default function PricingPage() {
     fetchUsage();
   }, []);
 
-  const handleSelectTier = async (tier: Tier) => {
-    // For now, just show a message since payments aren't connected
-    alert(
-      tier === 'free'
-        ? 'Downgraded to Free tier.'
-        : `Payment processing coming soon! You selected the ${TIER_CONFIGS[tier].name} plan ($${TIER_CONFIGS[tier].price}/mo).`
-    );
+  const handleSelectTier = (tier: Tier) => {
+    setSelectedTier(tier);
+  };
+
+  const handlePlanChangeComplete = async () => {
+    try {
+      const res = await fetch('/api/usage');
+      if (res.ok) {
+        const data = await res.json();
+        setUsage(data);
+      }
+    } catch {
+      // Silently fail — page will show stale data until next load
+    }
   };
 
   const currentTier = usage?.tier || 'free';
@@ -67,12 +76,14 @@ export default function PricingPage() {
         ))}
       </div>
 
-      {/* Coming soon notice */}
-      <div className="bg-muted-light rounded-xl p-4 text-center">
-        <p className="text-xs text-muted">
-          💳 Payment processing coming soon. Tier selection is currently for preview purposes.
-        </p>
-      </div>
+      {/* Plan change modal */}
+      <PlanChangeModal
+        isOpen={!!selectedTier}
+        onClose={() => setSelectedTier(null)}
+        targetTier={selectedTier}
+        currentTier={currentTier}
+        onComplete={handlePlanChangeComplete}
+      />
     </div>
   );
 }

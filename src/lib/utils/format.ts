@@ -31,6 +31,6 @@ export function formatNumber(num: number): string {
 }
 
 export function formatMintId(mintId: number): string {
-  // Base-36 encoding (0-9, A-Z) — 4 chars supports 1.6M+ unique IDs
-  return `MINT-${mintId.toString(36).toUpperCase().padStart(4, '0')}`;
+  // Base-36 encoding (0-9, A-Z) — 6 chars supports 2.1B+ unique IDs
+  return `MINT-${mintId.toString(36).toUpperCase().padStart(6, '0')}`;
 }

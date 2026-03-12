@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ImageUploader from '@/components/features/scan/ImageUploader';
 import ScanLoadingState from '@/components/features/scan/ScanLoadingState';
@@ -14,9 +14,39 @@ export default function SingleScanPage() {
   const [backBase64, setBackBase64] = useState<string | null>(null);
   const [backMimeType, setBackMimeType] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [tier, setTier] = useState<string>('free');
   const { isScanning, singleResult, error, startScan, setSingleResult, setScanError, reset } =
     useScanStore();
   const router = useRouter();
+
+  const isFree = tier === 'free';
+
+  // Clear stale results when navigating back to this page
+  useEffect(() => {
+    reset();
+    setFrontBase64(null);
+    setFrontMimeType(null);
+    setBackBase64(null);
+    setBackMimeType(null);
+    setIsSaved(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch user tier
+  useEffect(() => {
+    async function fetchTier() {
+      try {
+        const res = await fetch('/api/usage');
+        if (res.ok) {
+          const data = await res.json();
+          setTier(data.tier);
+        }
+      } catch {
+        // Default to free
+      }
+    }
+    fetchTier();
+  }, []);
 
   const handleSaveToCollection = useCallback(async () => {
     if (!singleResult) return;
@@ -105,8 +135,9 @@ export default function SingleScanPage() {
         </div>
         <SingleCardResults
           card={singleResult}
-          onSaveToCollection={handleSaveToCollection}
+          onSaveToCollection={isFree ? undefined : handleSaveToCollection}
           isSaved={isSaved}
+          isFree={isFree}
         />
       </div>
     );

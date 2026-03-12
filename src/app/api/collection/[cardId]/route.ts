@@ -29,6 +29,8 @@ export async function GET(
         centering_score, corners_score, edges_score, surface_score,
         estimated_psa_grade_low, estimated_psa_grade_high,
         grading_explanation, grade_improvement_tips,
+        graded_value_low, graded_value_high,
+        image_path, back_image_path,
         created_at
       `)
       .eq('id', cardId)
@@ -78,6 +80,10 @@ export async function GET(
         estimatedPsaGradeHigh: card.estimated_psa_grade_high,
         gradingExplanation: card.grading_explanation,
         gradeImprovementTips: card.grade_improvement_tips,
+        gradedValueLow: card.graded_value_low,
+        gradedValueHigh: card.graded_value_high,
+        imagePath: card.image_path || null,
+        backImagePath: card.back_image_path || null,
         createdAt: card.created_at,
       },
       scanType: scan?.scan_type || (isSingleScan ? 'single' : 'multi'),
@@ -107,6 +113,14 @@ export async function DELETE(
 
     const { cardId } = await params;
 
+    // Fetch image paths before deleting so we can clean up storage
+    const { data: cardData } = await supabase
+      .from('card_results')
+      .select('image_path, back_image_path')
+      .eq('id', cardId)
+      .eq('user_id', user.id)
+      .single();
+
     // Delete from card_results (RLS ensures user can only delete own)
     const { error } = await supabase
       .from('card_results')
@@ -120,6 +134,16 @@ export async function DELETE(
         { error: 'Failed to delete card' },
         { status: 500 }
       );
+    }
+
+    // Clean up storage images (front + back)
+    const pathsToRemove: string[] = [];
+    if (cardData?.image_path) pathsToRemove.push(cardData.image_path);
+    if (cardData?.back_image_path) pathsToRemove.push(cardData.back_image_path);
+    if (pathsToRemove.length > 0) {
+      await supabase.storage
+        .from('card-images')
+        .remove(pathsToRemove);
     }
 
     return NextResponse.json({ success: true });

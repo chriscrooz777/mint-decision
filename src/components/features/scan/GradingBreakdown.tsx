@@ -7,6 +7,7 @@ interface GradingBreakdownProps {
   corners: GradingDetail;
   edges: GradingDetail;
   surface: GradingDetail;
+  hideTitle?: boolean;
 }
 
 export default function GradingBreakdown({
@@ -14,6 +15,7 @@ export default function GradingBreakdown({
   corners,
   edges,
   surface,
+  hideTitle,
 }: GradingBreakdownProps) {
   const categories = [
     { label: 'Centering', ...centering },
@@ -24,7 +26,7 @@ export default function GradingBreakdown({
 
   return (
     <div className="space-y-3">
-      <h3 className="font-bold text-sm">Grading Breakdown</h3>
+      {!hideTitle && <h3 className="font-bold text-sm">Grading Breakdown</h3>}
       {categories.map((cat) => (
         <GradeBar key={cat.label} label={cat.label} score={cat.score} notes={cat.notes} />
       ))}

@@ -182,3 +182,145 @@ export function getImageMimeType(file: File): string {
   // Default to jpeg
   return 'image/jpeg';
 }
+
+/**
+ * Crop a single card from a multi-card grid image.
+ * Returns a JPEG Blob at ~400px max dimension.
+ * Matches the cropping logic in CroppedCardThumbnail exactly
+ * (5% inward padding, clamped to image bounds).
+ */
+export function cropCardFromGrid(
+  imageDataUrl: string,
+  gridLayout: { gridRows: number; gridCols: number },
+  gridPosition: { gridRow: number; gridCol: number },
+  maxSize = 400
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+
+      const cellWidth = img.naturalWidth / gridLayout.gridCols;
+      const cellHeight = img.naturalHeight / gridLayout.gridRows;
+
+      const baseX = gridPosition.gridCol * cellWidth;
+      const baseY = gridPosition.gridRow * cellHeight;
+
+      // 5% inward padding to avoid neighbor card edges
+      const padX = cellWidth * 0.05;
+      const padY = cellHeight * 0.05;
+
+      const cropX = baseX + padX;
+      const cropY = baseY + padY;
+      const cropW = cellWidth - padX * 2;
+      const cropH = cellHeight - padY * 2;
+
+      // Clamp to image bounds
+      const finalX = Math.max(0, cropX);
+      const finalY = Math.max(0, cropY);
+      const finalW = Math.min(img.naturalWidth - finalX, cropW);
+      const finalH = Math.min(img.naturalHeight - finalY, cropH);
+
+      // Scale to maxSize maintaining aspect ratio
+      const aspectRatio = finalW / finalH;
+      let canvasW: number, canvasH: number;
+      if (aspectRatio > 1) {
+        canvasW = maxSize;
+        canvasH = maxSize / aspectRatio;
+      } else {
+        canvasH = maxSize;
+        canvasW = maxSize * aspectRatio;
+      }
+
+      canvas.width = canvasW;
+      canvas.height = canvasH;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+
+      ctx.drawImage(img, finalX, finalY, finalW, finalH, 0, 0, canvasW, canvasH);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Failed to create blob from canvas'));
+            return;
+          }
+          resolve(blob);
+        },
+        'image/jpeg',
+        0.85
+      );
+    };
+    img.onerror = () => reject(new Error('Failed to load image for cropping'));
+    img.src = imageDataUrl;
+  });
+}
+
+/**
+ * Convert a base64 data URL directly to a Blob (no resizing).
+ * Used for single-card uploads where the image IS the card.
+ * The image is already compressed by useImageUpload (≤2MB / 2048px).
+ */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const [header, base64] = dataUrl.split(',');
+  const mimeMatch = header.match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+  const bytes = atob(base64);
+  const buffer = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) {
+    buffer[i] = bytes.charCodeAt(i);
+  }
+  return new Blob([buffer], { type: mime });
+}
+
+/**
+ * Convert a base64 data URL to a resized JPEG Blob.
+ * Used for multi-scan grid thumbnails where cards must be cropped.
+ */
+export function dataUrlToResizedBlob(
+  dataUrl: string,
+  maxSize = 400
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const aspectRatio = img.naturalWidth / img.naturalHeight;
+      let w: number, h: number;
+      if (aspectRatio > 1) {
+        w = maxSize;
+        h = maxSize / aspectRatio;
+      } else {
+        h = maxSize;
+        w = maxSize * aspectRatio;
+      }
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Failed to create blob'));
+            return;
+          }
+          resolve(blob);
+        },
+        'image/jpeg',
+        0.85
+      );
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = dataUrl;
+  });
+}
