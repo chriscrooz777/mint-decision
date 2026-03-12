@@ -23,11 +23,30 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { imageFront, mimeTypeFront, imageBack, mimeTypeBack } = body;
+    const { cardId, imageFront, mimeTypeFront, imageBack, mimeTypeBack } = body;
 
-    if (!imageFront || !mimeTypeFront) {
+    if (!cardId || !imageFront || !mimeTypeFront) {
       return NextResponse.json(
-        { error: 'Front image is required' },
+        { error: 'Card ID and front image are required' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch existing card — verify ownership and that it's a Quick Scan
+    const { data: existingCard, error: fetchError } = await supabase
+      .from('card_results')
+      .select('id, mint_id, player_name, card_year, card_set, card_number, sport, manufacturer, centering_score')
+      .eq('id', cardId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (fetchError || !existingCard) {
+      return NextResponse.json({ error: 'Card not found' }, { status: 404 });
+    }
+
+    if (existingCard.centering_score !== null) {
+      return NextResponse.json(
+        { error: 'This card already has a Deep Evaluation' },
         { status: 400 }
       );
     }
@@ -59,7 +78,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create scan record
+    // Create new scan record
     const { data: scan, error: scanError } = await supabase
       .from('scans')
       .insert({
@@ -106,6 +125,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Build enhanced user message with known card identity
+    const identityParts = [
+      `Known card identity: ${existingCard.player_name}`,
+      existingCard.card_year && existingCard.card_year !== 'unknown' ? `Year: ${existingCard.card_year}` : '',
+      existingCard.card_set && existingCard.card_set !== 'unknown' ? `Set: ${existingCard.card_set}` : '',
+      existingCard.card_number && existingCard.card_number !== 'unknown' ? `Card number: ${existingCard.card_number}` : '',
+      existingCard.sport && existingCard.sport !== 'unknown' ? `Sport: ${existingCard.sport}` : '',
+      existingCard.manufacturer && existingCard.manufacturer !== 'unknown' ? `Manufacturer: ${existingCard.manufacturer}` : '',
+    ].filter(Boolean).join('\n');
+
+    const baseText = imageBack
+      ? 'Here are the front and back of the card. Please provide a detailed evaluation.'
+      : 'Here is the front of the card. The back was not provided. Please evaluate what you can see and note any limitations.';
+
+    const userText = `${baseText}\n\n${identityParts}\n\nPlease cross-reference this identity with what you see in the images and provide your detailed grading.`;
+
     // Call OpenAI Vision API
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -115,12 +150,7 @@ export async function POST(request: NextRequest) {
           role: 'user',
           content: [
             ...imageContent,
-            {
-              type: 'text',
-              text: imageBack
-                ? 'Here are the front and back of the card. Please provide a detailed evaluation.'
-                : 'Here is the front of the card. The back was not provided. Please evaluate what you can see and note any limitations.',
-            },
+            { type: 'text', text: userText },
           ],
         },
       ],
@@ -146,28 +176,19 @@ export async function POST(request: NextRequest) {
 
     const c = aiResult.card;
 
-    // Get next mint_id
-    const { data: nextMintId } = await supabase.rpc('next_mint_id', {
-      p_user_id: user.id,
-    });
-    const mintId = nextMintId || 1;
-
-    // Save card result
-    const { data: savedCard } = await supabase
+    // UPDATE existing card_results row (not INSERT — preserve mint_id)
+    const { error: updateError } = await supabase
       .from('card_results')
-      .insert({
+      .update({
         scan_id: scan.id,
-        user_id: user.id,
-        card_index: 0,
-        mint_id: mintId,
+        // Card identity (AI may refine)
         player_name: c.player_name,
         card_year: c.card_year,
         card_set: c.card_set,
         card_number: c.card_number,
         sport: c.sport,
         manufacturer: c.manufacturer,
-        raw_price_low: c.raw_price_low,
-        raw_price_high: c.raw_price_high,
+        // Grading scores (were NULL, now populated)
         centering_score: c.centering_score,
         corners_score: c.corners_score,
         edges_score: c.edges_score,
@@ -176,13 +197,28 @@ export async function POST(request: NextRequest) {
         estimated_psa_grade_high: c.estimated_psa_grade_high,
         grading_explanation: c.grading_explanation,
         grade_improvement_tips: c.grade_improvement_tips,
+        // Updated values
+        raw_price_low: c.raw_price_low,
+        raw_price_high: c.raw_price_high,
         graded_value_low: c.graded_value_low,
         graded_value_high: c.graded_value_high,
       })
-      .select('id, mint_id')
-      .single();
+      .eq('id', cardId)
+      .eq('user_id', user.id);
 
-    // Update scan status
+    if (updateError) {
+      console.error('Failed to update card:', updateError);
+      await supabase
+        .from('scans')
+        .update({ status: 'failed' })
+        .eq('id', scan.id);
+      return NextResponse.json(
+        { error: 'Failed to update card' },
+        { status: 500 }
+      );
+    }
+
+    // Mark scan completed
     await supabase
       .from('scans')
       .update({
@@ -204,36 +240,35 @@ export async function POST(request: NextRequest) {
     }
 
     // Upload images to Supabase Storage (server-side)
-    if (savedCard?.id) {
-      try {
-        const frontBuffer = Buffer.from(imageFront, 'base64');
-        const frontJpeg = await sharp(frontBuffer).jpeg({ quality: 85 }).toBuffer();
-        const frontPath = await uploadCardImageServer(supabase, frontJpeg, user.id, savedCard.id);
+    try {
+      const frontBuffer = Buffer.from(imageFront, 'base64');
+      const frontJpeg = await sharp(frontBuffer).jpeg({ quality: 85 }).toBuffer();
+      const frontPath = await uploadCardImageServer(supabase, frontJpeg, user.id, cardId);
 
-        let backPath: string | null = null;
-        if (imageBack) {
-          const backBuffer = Buffer.from(imageBack, 'base64');
-          const backJpeg = await sharp(backBuffer).jpeg({ quality: 85 }).toBuffer();
-          backPath = await uploadCardBackImageServer(supabase, backJpeg, user.id, savedCard.id);
-        }
-
-        if (frontPath || backPath) {
-          await supabase
-            .from('card_results')
-            .update({
-              ...(frontPath ? { image_path: frontPath } : {}),
-              ...(backPath ? { back_image_path: backPath } : {}),
-            })
-            .eq('id', savedCard.id);
-        }
-      } catch (imgErr) {
-        console.error('Failed to upload single scan images:', imgErr);
+      let backPath: string | null = null;
+      if (imageBack) {
+        const backBuffer = Buffer.from(imageBack, 'base64');
+        const backJpeg = await sharp(backBuffer).jpeg({ quality: 85 }).toBuffer();
+        backPath = await uploadCardBackImageServer(supabase, backJpeg, user.id, cardId);
       }
+
+      if (frontPath || backPath) {
+        await supabase
+          .from('card_results')
+          .update({
+            ...(frontPath ? { image_path: frontPath } : {}),
+            ...(backPath ? { back_image_path: backPath } : {}),
+          })
+          .eq('id', cardId)
+          .eq('user_id', user.id);
+      }
+    } catch (imgErr) {
+      console.error('Failed to upload upgrade scan images:', imgErr);
     }
 
     const card = {
-      id: savedCard?.id || crypto.randomUUID(),
-      mintId: savedCard?.mint_id || mintId,
+      id: existingCard.id,
+      mintId: existingCard.mint_id,
       scanId: scan.id,
       playerName: c.player_name,
       cardYear: c.card_year,
@@ -258,7 +293,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ scanId: scan.id, card });
   } catch (err) {
-    console.error('Single-scan error:', err);
+    console.error('Upgrade scan error:', err);
     return NextResponse.json(
       { error: 'An unexpected error occurred. Please try again.' },
       { status: 500 }

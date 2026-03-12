@@ -3,8 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import { openai } from '@/lib/openai/client';
 import { MULTI_CARD_SYSTEM_PROMPT } from '@/lib/openai/prompts';
 import { multiCardSchema } from '@/lib/openai/schemas';
+import { cleanupFreeResults } from '@/lib/utils/cleanupFreeResults';
+import { uploadCardImageServer } from '@/lib/supabase/server-storage';
 import { AIMultiScanResponse } from '@/types/scan';
 import { getCurrentMonthYear } from '@/lib/utils/format';
+import sharp from 'sharp';
 
 export const maxDuration = 60; // Allow up to 60s for OpenAI response
 
@@ -165,6 +168,60 @@ export async function POST(request: NextRequest) {
       p_user_id: user.id,
       p_month_year: monthYear,
     });
+
+    // Free tier: keep only latest 5 card_results
+    if (tier === 'free') {
+      await cleanupFreeResults(supabase, user.id);
+    }
+
+    // Upload cropped card images to Supabase Storage (server-side with sharp)
+    try {
+      const imageBuffer = Buffer.from(image, 'base64');
+      const metadata = await sharp(imageBuffer).metadata();
+      const imgWidth = metadata.width || 1;
+      const imgHeight = metadata.height || 1;
+
+      for (const card of aiResult.cards) {
+        const savedCard = savedCards?.find((sc) => sc.card_index === card.card_index);
+        if (!savedCard) continue;
+
+        const cellWidth = imgWidth / aiResult.grid_cols;
+        const cellHeight = imgHeight / aiResult.grid_rows;
+        const baseX = card.grid_col * cellWidth;
+        const baseY = card.grid_row * cellHeight;
+
+        // 5% inward padding (matches client-side CroppedCardThumbnail)
+        const padX = cellWidth * 0.05;
+        const padY = cellHeight * 0.05;
+
+        const left = Math.max(0, Math.round(baseX + padX));
+        const top = Math.max(0, Math.round(baseY + padY));
+        const width = Math.min(Math.round(cellWidth - padX * 2), imgWidth - left);
+        const height = Math.min(Math.round(cellHeight - padY * 2), imgHeight - top);
+
+        if (width <= 0 || height <= 0) continue;
+
+        try {
+          const croppedBuffer = await sharp(imageBuffer)
+            .extract({ left, top, width, height })
+            .resize(400, 400, { fit: 'inside' })
+            .jpeg({ quality: 85 })
+            .toBuffer();
+
+          const storagePath = await uploadCardImageServer(supabase, croppedBuffer, user.id, savedCard.id);
+          if (storagePath) {
+            await supabase
+              .from('card_results')
+              .update({ image_path: storagePath })
+              .eq('id', savedCard.id);
+          }
+        } catch (cropErr) {
+          console.error(`Failed to crop/upload image for card ${savedCard.id}:`, cropErr);
+        }
+      }
+    } catch (imgErr) {
+      console.error('Failed to process images for upload:', imgErr);
+    }
 
     // Build response
     const gridLayout = {

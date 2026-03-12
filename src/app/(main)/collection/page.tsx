@@ -7,6 +7,7 @@ import { formatPriceRange, formatNumber, formatMintId, formatGradeRange } from '
 import { Sport } from '@/types/scan';
 import Link from 'next/link';
 import SwipeableCard from '@/components/features/collection/SwipeableCard';
+import { getCardImageUrl } from '@/lib/supabase/storage';
 
 interface CollectionCardData {
   id: string;
@@ -23,12 +24,14 @@ interface CollectionCardData {
   psa_recommendation?: string;
   estimated_psa_grade_low?: number | null;
   estimated_psa_grade_high?: number | null;
+  image_path: string | null;
   created_at: string;
 }
 
 interface CollectionResponse {
   cards: CollectionCardData[];
   total: number;
+  tier: string;
   stats: {
     totalCards: number;
     totalValueLow: number;
@@ -44,6 +47,10 @@ export default function CollectionPage() {
   const [search, setSearch] = useState('');
   const [sportFilter, setSportFilter] = useState('');
   const [sortBy, setSortBy] = useState('date');
+
+  const isFree = data?.tier === 'free';
+  const visibleCards = isFree ? data?.cards.slice(0, 5) ?? [] : data?.cards ?? [];
+  const teaserCard = isFree && data?.cards && data.cards.length > 5 ? data.cards[5] : null;
 
   const fetchCollection = useCallback(async () => {
     setIsLoading(true);
@@ -106,14 +113,16 @@ export default function CollectionPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">My Collection</h1>
+        <h1 className="text-2xl font-bold">{isFree ? 'Recent Scans' : 'My Collection'}</h1>
         <p className="text-muted text-sm mt-1">
-          Your saved cards and estimated values
+          {isFree
+            ? 'Your latest Quick Scan results'
+            : 'Your saved cards and estimated values'}
         </p>
       </div>
 
-      {/* Stats */}
-      {data?.stats && data.stats.totalCards > 0 && (
+      {/* Stats — paid users only */}
+      {!isFree && data?.stats && data.stats.totalCards > 0 && (
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-card rounded-xl border border-border p-3 text-center">
             <p className="text-xs text-muted">Total Cards</p>
@@ -128,49 +137,53 @@ export default function CollectionPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Search cards..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 rounded-xl border border-border text-sm focus:outline-none focus:border-primary bg-transparent"
-        />
-        <select
-          value={sportFilter}
-          onChange={(e) => setSportFilter(e.target.value)}
-          className="px-3 py-2 rounded-xl border border-border text-sm bg-transparent focus:outline-none focus:border-primary"
-        >
-          <option value="">All Sports</option>
-          {SUPPORTED_SPORTS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Sort */}
-      <div className="flex gap-1.5">
-        {[
-          { value: 'date', label: 'Recent' },
-          { value: 'name', label: 'Name' },
-          { value: 'value', label: 'Value' },
-        ].map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setSortBy(opt.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              sortBy === opt.value
-                ? 'bg-primary text-white'
-                : 'bg-muted-light text-muted hover:bg-border'
-            }`}
+      {/* Filters — paid users only */}
+      {!isFree && (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Search cards..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 px-3 py-2 rounded-xl border border-border text-sm focus:outline-none focus:border-primary bg-transparent"
+          />
+          <select
+            value={sportFilter}
+            onChange={(e) => setSportFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-border text-sm bg-transparent focus:outline-none focus:border-primary"
           >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+            <option value="">All Sports</option>
+            {SUPPORTED_SPORTS.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Sort — paid users only */}
+      {!isFree && (
+        <div className="flex gap-1.5">
+          {[
+            { value: 'date', label: 'Recent' },
+            { value: 'name', label: 'Name' },
+            { value: 'value', label: 'Value' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setSortBy(opt.value)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                sortBy === opt.value
+                  ? 'bg-primary text-white'
+                  : 'bg-muted-light text-muted hover:bg-border'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -200,16 +213,20 @@ export default function CollectionPage() {
       )}
 
       {/* Empty state */}
-      {!isLoading && data?.cards.length === 0 && !error && (
+      {!isLoading && visibleCards.length === 0 && !error && (
         <div className="text-center py-12">
           <div className="w-12 h-12 bg-muted-light rounded-xl flex items-center justify-center mx-auto mb-3">
             <svg className="w-6 h-6 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <h3 className="font-bold text-sm mb-1">No cards yet</h3>
+          <h3 className="font-bold text-sm mb-1">
+            {isFree ? 'No recent scans' : 'No cards yet'}
+          </h3>
           <p className="text-xs text-muted mb-4">
-            Scan your cards and save them to build your collection.
+            {isFree
+              ? 'Scan your cards to see results here.'
+              : 'Scan your cards and save them to build your collection.'}
           </p>
           <Link
             href="/scan"
@@ -221,16 +238,16 @@ export default function CollectionPage() {
       )}
 
       {/* Hint */}
-      {!isLoading && data?.cards && data.cards.length > 0 && (
+      {!isLoading && visibleCards.length > 0 && (
         <p className="text-[10px] text-muted text-center">
-          Tap a card for details · Swipe left to delete
+          {isFree ? 'Tap a card for details' : 'Tap a card for details · Swipe left to delete'}
         </p>
       )}
 
       {/* Card list */}
-      {!isLoading && data?.cards && data.cards.length > 0 && (
+      {!isLoading && visibleCards.length > 0 && (
         <div className="space-y-2">
-          {data.cards.map((card) => (
+          {visibleCards.map((card) => (
             <SwipeableCard
               key={card.id}
               cardId={card.id}
@@ -238,9 +255,18 @@ export default function CollectionPage() {
               onTap={() => router.push(`/collection/${card.id}`)}
             >
               <div className="bg-card rounded-xl border border-border p-3 flex items-center gap-3 active:bg-muted-light cursor-pointer">
-                <div className="w-10 h-10 bg-muted-light rounded-lg flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-muted">{card.sport}</span>
-                </div>
+                {card.image_path ? (
+                  <img
+                    src={getCardImageUrl(card.image_path)!}
+                    alt={card.player_name}
+                    className="w-10 h-14 object-cover rounded-lg border border-border shrink-0"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-10 h-14 bg-muted-light rounded-lg flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-bold text-muted">{card.sport}</span>
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <p className="text-sm font-bold truncate">{card.player_name}</p>
@@ -286,6 +312,87 @@ export default function CollectionPage() {
               </div>
             </SwipeableCard>
           ))}
+
+          {/* Faded 6th card teaser (free tier only) */}
+          {teaserCard && (
+            <div className="relative overflow-hidden rounded-xl">
+              <div className="pointer-events-none">
+                <div className="bg-card rounded-xl border border-border p-3 flex items-center gap-3">
+                  {teaserCard.image_path ? (
+                    <img
+                      src={getCardImageUrl(teaserCard.image_path)!}
+                      alt={teaserCard.player_name}
+                      className="w-10 h-14 object-cover rounded-lg border border-border shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-14 bg-muted-light rounded-lg flex items-center justify-center shrink-0">
+                      <span className="text-[10px] font-bold text-muted">{teaserCard.sport}</span>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-bold truncate">{teaserCard.player_name}</p>
+                    </div>
+                    <p className="text-xs text-muted truncate">
+                      {[
+                        teaserCard.card_year && teaserCard.card_year !== 'unknown' ? teaserCard.card_year : '',
+                        teaserCard.card_set && teaserCard.card_set !== 'unknown' ? teaserCard.card_set : '',
+                      ].filter(Boolean).join(' ')}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs font-bold text-primary">
+                      {formatPriceRange(teaserCard.estimated_value_low, teaserCard.estimated_value_high)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {/* Gradient fade overlay */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white rounded-xl" />
+            </div>
+          )}
+
+          {/* Upgrade CTA (free tier only) */}
+          {isFree && (
+            <div className="bg-gradient-to-r from-primary to-blue-600 rounded-2xl p-5 text-center text-white shadow-md shadow-primary/10">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-base mb-1">Unlock Your Full Collection</h3>
+              <p className="text-xs text-white/80 mb-3">
+                Save unlimited cards, track values, and build your collection with Pro.
+              </p>
+              <Link
+                href="/pricing"
+                className="inline-block bg-white text-primary font-bold text-sm px-6 py-2.5 rounded-xl hover:bg-white/90 transition-colors"
+              >
+                View Plans
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Upgrade CTA for empty state free users */}
+      {!isLoading && isFree && visibleCards.length === 0 && !error && (
+        <div className="bg-gradient-to-r from-primary to-blue-600 rounded-2xl p-5 text-center text-white shadow-md shadow-primary/10">
+          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h3 className="font-bold text-base mb-1">Unlock Your Full Collection</h3>
+          <p className="text-xs text-white/80 mb-3">
+            Save unlimited cards, track values, and build your collection with Pro.
+          </p>
+          <Link
+            href="/pricing"
+            className="inline-block bg-white text-primary font-bold text-sm px-6 py-2.5 rounded-xl hover:bg-white/90 transition-colors"
+          >
+            View Plans
+          </Link>
         </div>
       )}
     </div>

@@ -13,6 +13,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get user tier
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('tier')
+      .eq('id', user.id)
+      .single();
+
+    const tier = (profile?.tier || 'free') as string;
+    const isFree = tier === 'free';
+
     const url = new URL(request.url);
     const sport = url.searchParams.get('sport');
     const search = url.searchParams.get('search');
@@ -21,10 +31,10 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
 
-    // Query card_results directly so all scanned cards appear in collection
+    // Query card_results directly
     let query = supabase
       .from('card_results')
-      .select('id, mint_id, player_name, card_year, card_set, card_number, sport, manufacturer, raw_price_low, raw_price_high, psa_recommendation, estimated_psa_grade_low, estimated_psa_grade_high, created_at, scan_id', { count: 'exact' })
+      .select('id, mint_id, player_name, card_year, card_set, card_number, sport, manufacturer, raw_price_low, raw_price_high, psa_recommendation, estimated_psa_grade_low, estimated_psa_grade_high, image_path, created_at, scan_id', { count: 'exact' })
       .eq('user_id', user.id);
 
     if (sport) {
@@ -37,22 +47,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Sorting
-    switch (sortBy) {
-      case 'name':
-        query = query.order('player_name', { ascending: true });
-        break;
-      case 'value':
-        query = query.order('raw_price_high', { ascending: false });
-        break;
-      case 'sport':
-        query = query.order('sport', { ascending: true });
-        break;
-      default:
-        query = query.order('created_at', { ascending: false });
+    if (isFree) {
+      // Free tier: always most recent, capped at 6 (5 visible + 1 teaser)
+      query = query.order('created_at', { ascending: false }).limit(6);
+    } else {
+      // Paid tier: normal sorting + pagination
+      switch (sortBy) {
+        case 'name':
+          query = query.order('player_name', { ascending: true });
+          break;
+        case 'value':
+          query = query.order('raw_price_high', { ascending: false });
+          break;
+        case 'sport':
+          query = query.order('sport', { ascending: true });
+          break;
+        default:
+          query = query.order('created_at', { ascending: false });
+      }
+      query = query.range(offset, offset + limit - 1);
     }
-
-    query = query.range(offset, offset + limit - 1);
 
     const { data: rawCards, count, error } = await query;
 
@@ -80,6 +94,7 @@ export async function GET(request: NextRequest) {
       psa_recommendation: c.psa_recommendation,
       estimated_psa_grade_low: c.estimated_psa_grade_low,
       estimated_psa_grade_high: c.estimated_psa_grade_high,
+      image_path: c.image_path || null,
       created_at: c.created_at,
     }));
 
@@ -97,6 +112,7 @@ export async function GET(request: NextRequest) {
       total: count || 0,
       page,
       limit,
+      tier,
       stats: {
         totalCards: count || 0,
         totalValueLow,
