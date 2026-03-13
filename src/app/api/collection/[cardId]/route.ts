@@ -113,37 +113,19 @@ export async function DELETE(
 
     const { cardId } = await params;
 
-    // Fetch image paths before deleting so we can clean up storage
-    const { data: cardData } = await supabase
-      .from('card_results')
-      .select('image_path, back_image_path')
-      .eq('id', cardId)
-      .eq('user_id', user.id)
-      .single();
-
-    // Delete from card_results (RLS ensures user can only delete own)
+    // Remove from collection_cards (unsave) — preserves scan history in card_results
     const { error } = await supabase
-      .from('card_results')
+      .from('collection_cards')
       .delete()
-      .eq('id', cardId)
+      .eq('card_result_id', cardId)
       .eq('user_id', user.id);
 
     if (error) {
-      console.error('Delete card error:', error);
+      console.error('Unsave card error:', error);
       return NextResponse.json(
-        { error: 'Failed to delete card' },
+        { error: 'Failed to remove card from collection' },
         { status: 500 }
       );
-    }
-
-    // Clean up storage images (front + back)
-    const pathsToRemove: string[] = [];
-    if (cardData?.image_path) pathsToRemove.push(cardData.image_path);
-    if (cardData?.back_image_path) pathsToRemove.push(cardData.back_image_path);
-    if (pathsToRemove.length > 0) {
-      await supabase.storage
-        .from('card-images')
-        .remove(pathsToRemove);
     }
 
     return NextResponse.json({ success: true });

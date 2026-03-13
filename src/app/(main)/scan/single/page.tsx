@@ -48,6 +48,21 @@ export default function SingleScanPage() {
     fetchTier();
   }, []);
 
+  const handleUnsaveFromCollection = useCallback(async () => {
+    if (!singleResult) return;
+    try {
+      const res = await fetch(`/api/collection/${singleResult.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to remove card.');
+        return;
+      }
+      setIsSaved(false);
+    } catch {
+      alert('Failed to remove card from collection.');
+    }
+  }, [singleResult]);
+
   const handleSaveToCollection = useCallback(async () => {
     if (!singleResult) return;
     try {
@@ -136,6 +151,7 @@ export default function SingleScanPage() {
         <SingleCardResults
           card={singleResult}
           onSaveToCollection={isFree ? undefined : handleSaveToCollection}
+          onUnsaveFromCollection={isFree ? undefined : handleUnsaveFromCollection}
           isSaved={isSaved}
           isFree={isFree}
         />

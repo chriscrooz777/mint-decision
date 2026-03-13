@@ -11,6 +11,7 @@ interface CardResultCardProps {
   imageDataUrl?: string;
   gridLayout?: GridLayout;
   onSaveToCollection?: (cardId: string) => void;
+  onUnsaveFromCollection?: (cardId: string) => void;
   isSaved?: boolean;
 }
 
@@ -26,7 +27,7 @@ const recommendationColor: Record<string, string> = {
   maybe: 'text-amber-500',
 };
 
-export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveToCollection, isSaved }: CardResultCardProps) {
+export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveToCollection, onUnsaveFromCollection, isSaved }: CardResultCardProps) {
   const [showWhy, setShowWhy] = useState(false);
 
   return (
@@ -109,33 +110,37 @@ export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveT
         >
           {showWhy ? 'Hide' : 'Why?'}
         </button>
-        {onSaveToCollection && (
-          <button
-            onClick={() => !isSaved && onSaveToCollection(card.id)}
-            disabled={isSaved}
-            className={`text-xs font-semibold ml-auto flex items-center gap-1 ${
-              isSaved
-                ? 'text-emerald-600 cursor-default'
-                : 'text-muted hover:text-foreground'
-            }`}
-          >
-            {isSaved ? (
-              <>
+        {isSaved ? (
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Saved
+            </span>
+            {onUnsaveFromCollection && (
+              <button
+                onClick={() => onUnsaveFromCollection(card.id)}
+                className="text-muted hover:text-danger transition-colors"
+                title="Remove from collection"
+              >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Saved
-              </>
-            ) : (
-              <>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Save
-              </>
+              </button>
             )}
+          </div>
+        ) : onSaveToCollection ? (
+          <button
+            onClick={() => onSaveToCollection(card.id)}
+            className="text-xs font-semibold ml-auto flex items-center gap-1 text-muted hover:text-foreground"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Save
           </button>
-        )}
+        ) : null}
       </div>
 
       {/* Why explanation */}

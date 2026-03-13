@@ -62,6 +62,24 @@ export default function MultiScanPage() {
     }
   }, []);
 
+  const handleUnsaveFromCollection = useCallback(async (cardId: string) => {
+    try {
+      const res = await fetch(`/api/collection/${cardId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to remove card.');
+        return;
+      }
+      setSavedCards((prev) => {
+        const next = new Set(prev);
+        next.delete(cardId);
+        return next;
+      });
+    } catch {
+      alert('Failed to remove card from collection.');
+    }
+  }, []);
+
   const handleSaveAll = useCallback(async () => {
     if (!multiResults) return;
     const unsaved = multiResults.filter((c) => !savedCards.has(c.id));
@@ -125,6 +143,7 @@ export default function MultiScanPage() {
           imageDataUrl={originalImageDataUrl || undefined}
           gridLayout={gridLayout || undefined}
           onSaveToCollection={isFree ? undefined : handleSaveToCollection}
+          onUnsaveFromCollection={isFree ? undefined : handleUnsaveFromCollection}
           onSaveAll={isFree ? undefined : handleSaveAll}
           savedCards={savedCards}
           isFree={isFree}

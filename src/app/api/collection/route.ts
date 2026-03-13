@@ -21,8 +21,6 @@ export async function GET(request: NextRequest) {
       .single();
 
     const tier = (profile?.tier || 'free') as string;
-    const isFree = tier === 'free';
-
     const url = new URL(request.url);
     const sport = url.searchParams.get('sport');
     const search = url.searchParams.get('search');
@@ -31,11 +29,32 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
 
-    // Query card_results directly
+    // Get IDs of explicitly saved cards from collection_cards
+    const { data: savedEntries } = await supabase
+      .from('collection_cards')
+      .select('card_result_id')
+      .eq('user_id', user.id);
+
+    const savedCardResultIds = (savedEntries || []).map((c) => c.card_result_id as string);
+
+    // No saved cards — return empty collection early
+    if (savedCardResultIds.length === 0) {
+      return NextResponse.json({
+        cards: [],
+        total: 0,
+        page,
+        limit,
+        tier,
+        stats: { totalCards: 0, totalValueLow: 0, totalValueHigh: 0 },
+      });
+    }
+
+    // Query only the card_results that have been explicitly saved
     let query = supabase
       .from('card_results')
       .select('id, mint_id, player_name, card_year, card_set, card_number, sport, manufacturer, raw_price_low, raw_price_high, psa_recommendation, estimated_psa_grade_low, estimated_psa_grade_high, image_path, created_at, scan_id', { count: 'exact' })
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .in('id', savedCardResultIds);
 
     if (sport) {
       query = query.eq('sport', sport);
@@ -47,26 +66,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (isFree) {
-      // Free tier: always most recent, capped at 6 (5 visible + 1 teaser)
-      query = query.order('created_at', { ascending: false }).limit(6);
-    } else {
-      // Paid tier: normal sorting + pagination
-      switch (sortBy) {
-        case 'name':
-          query = query.order('player_name', { ascending: true });
-          break;
-        case 'value':
-          query = query.order('raw_price_high', { ascending: false });
-          break;
-        case 'sport':
-          query = query.order('sport', { ascending: true });
-          break;
-        default:
-          query = query.order('created_at', { ascending: false });
-      }
-      query = query.range(offset, offset + limit - 1);
+    switch (sortBy) {
+      case 'name':
+        query = query.order('player_name', { ascending: true });
+        break;
+      case 'value':
+        query = query.order('raw_price_high', { ascending: false });
+        break;
+      default:
+        query = query.order('created_at', { ascending: false });
     }
+    query = query.range(offset, offset + limit - 1);
 
     const { data: rawCards, count, error } = await query;
 
@@ -98,11 +108,12 @@ export async function GET(request: NextRequest) {
       created_at: c.created_at,
     }));
 
-    // Get totals from card_results
+    // Totals based only on saved cards
     const { data: stats } = await supabase
       .from('card_results')
       .select('raw_price_low, raw_price_high')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .in('id', savedCardResultIds);
 
     const totalValueLow = stats?.reduce((sum, c) => sum + (c.raw_price_low || 0), 0) || 0;
     const totalValueHigh = stats?.reduce((sum, c) => sum + (c.raw_price_high || 0), 0) || 0;

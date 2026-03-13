@@ -49,8 +49,7 @@ export default function CollectionPage() {
   const [sortBy, setSortBy] = useState('date');
 
   const isFree = data?.tier === 'free';
-  const visibleCards = isFree ? data?.cards.slice(0, 5) ?? [] : data?.cards ?? [];
-  const teaserCard = isFree && data?.cards && data.cards.length > 5 ? data.cards[5] : null;
+  const visibleCards = data?.cards ?? [];
 
   const fetchCollection = useCallback(async () => {
     setIsLoading(true);
@@ -113,12 +112,8 @@ export default function CollectionPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">{isFree ? 'Recent Scans' : 'My Collection'}</h1>
-        <p className="text-muted text-sm mt-1">
-          {isFree
-            ? 'Your latest Quick Scan results'
-            : 'Your saved cards and estimated values'}
-        </p>
+        <h1 className="text-2xl font-bold">My Collection</h1>
+        <p className="text-muted text-sm mt-1">Your saved cards and estimated values</p>
       </div>
 
       {/* Stats — paid users only */}
@@ -220,13 +215,9 @@ export default function CollectionPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <h3 className="font-bold text-sm mb-1">
-            {isFree ? 'No recent scans' : 'No cards yet'}
-          </h3>
+          <h3 className="font-bold text-sm mb-1">No saved cards yet</h3>
           <p className="text-xs text-muted mb-4">
-            {isFree
-              ? 'Scan your cards to see results here.'
-              : 'Scan your cards and save them to build your collection.'}
+            Scan your cards and tap Save to build your collection.
           </p>
           <Link
             href="/scan"
@@ -240,7 +231,7 @@ export default function CollectionPage() {
       {/* Hint */}
       {!isLoading && visibleCards.length > 0 && (
         <p className="text-[10px] text-muted text-center">
-          {isFree ? 'Tap a card for details' : 'Tap a card for details · Swipe left to delete'}
+          Tap a card for details · Swipe left to remove
         </p>
       )}
 
@@ -314,44 +305,6 @@ export default function CollectionPage() {
           ))}
 
           {/* Faded 6th card teaser (free tier only) */}
-          {teaserCard && (
-            <div className="relative overflow-hidden rounded-xl">
-              <div className="pointer-events-none">
-                <div className="bg-card rounded-xl border border-border p-3 flex items-center gap-3">
-                  {teaserCard.image_path ? (
-                    <img
-                      src={getCardImageUrl(teaserCard.image_path)!}
-                      alt={teaserCard.player_name}
-                      className="w-10 h-14 object-cover rounded-lg border border-border shrink-0"
-                    />
-                  ) : (
-                    <div className="w-10 h-14 bg-muted-light rounded-lg flex items-center justify-center shrink-0">
-                      <span className="text-[10px] font-bold text-muted">{teaserCard.sport}</span>
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-bold truncate">{teaserCard.player_name}</p>
-                    </div>
-                    <p className="text-xs text-muted truncate">
-                      {[
-                        teaserCard.card_year && teaserCard.card_year !== 'unknown' ? teaserCard.card_year : '',
-                        teaserCard.card_set && teaserCard.card_set !== 'unknown' ? teaserCard.card_set : '',
-                      ].filter(Boolean).join(' ')}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xs font-bold text-primary">
-                      {formatPriceRange(teaserCard.estimated_value_low, teaserCard.estimated_value_high)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {/* Gradient fade overlay */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white rounded-xl" />
-            </div>
-          )}
-
           {/* Upgrade CTA (free tier only) */}
           {isFree && (
             <div className="bg-gradient-to-r from-primary to-blue-600 rounded-2xl p-5 text-center text-white shadow-md shadow-primary/10">
