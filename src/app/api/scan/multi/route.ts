@@ -177,46 +177,80 @@ export async function POST(request: NextRequest) {
     // Upload cropped card images to Supabase Storage (server-side with sharp)
     try {
       const imageBuffer = Buffer.from(image, 'base64');
-      const metadata = await sharp(imageBuffer).metadata();
+
+      // Auto-rotate based on EXIF orientation so processing matches the visual orientation
+      // seen by the AI and rendered by the browser. This prevents rotated images in collection.
+      const rotatedImageBuffer = await sharp(imageBuffer).rotate().toBuffer();
+      const metadata = await sharp(rotatedImageBuffer).metadata();
       const imgWidth = metadata.width || 1;
       const imgHeight = metadata.height || 1;
 
-      for (const card of aiResult.cards) {
-        const savedCard = savedCards?.find((sc) => sc.card_index === card.card_index);
-        if (!savedCard) continue;
-
-        const cellWidth = imgWidth / aiResult.grid_cols;
-        const cellHeight = imgHeight / aiResult.grid_rows;
-        const baseX = card.grid_col * cellWidth;
-        const baseY = card.grid_row * cellHeight;
-
-        // 5% inward padding (matches client-side CroppedCardThumbnail)
-        const padX = cellWidth * 0.05;
-        const padY = cellHeight * 0.05;
-
-        const left = Math.max(0, Math.round(baseX + padX));
-        const top = Math.max(0, Math.round(baseY + padY));
-        const width = Math.min(Math.round(cellWidth - padX * 2), imgWidth - left);
-        const height = Math.min(Math.round(cellHeight - padY * 2), imgHeight - top);
-
-        if (width <= 0 || height <= 0) continue;
-
-        try {
-          const croppedBuffer = await sharp(imageBuffer)
-            .extract({ left, top, width, height })
-            .resize(400, 400, { fit: 'inside' })
-            .jpeg({ quality: 85 })
-            .toBuffer();
-
-          const storagePath = await uploadCardImageServer(supabase, croppedBuffer, user.id, savedCard.id);
-          if (storagePath) {
-            await supabase
-              .from('card_results')
-              .update({ image_path: storagePath })
-              .eq('id', savedCard.id);
+      if (aiResult.grid_rows === 1 && aiResult.grid_cols === 1) {
+        // Single card — skip crop, just compress the full image to max 2 MB
+        const savedCard = savedCards?.find((sc) => sc.card_index === aiResult.cards[0].card_index);
+        if (savedCard) {
+          try {
+            let compressedBuffer = await sharp(rotatedImageBuffer)
+              .resize({ width: 2048, height: 2048, fit: 'inside', withoutEnlargement: true })
+              .jpeg({ quality: 85 })
+              .toBuffer();
+            // If still over 2 MB, reduce dimensions and quality further
+            if (compressedBuffer.length > 2 * 1024 * 1024) {
+              compressedBuffer = await sharp(rotatedImageBuffer)
+                .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
+                .jpeg({ quality: 75 })
+                .toBuffer();
+            }
+            const storagePath = await uploadCardImageServer(supabase, compressedBuffer, user.id, savedCard.id);
+            if (storagePath) {
+              await supabase
+                .from('card_results')
+                .update({ image_path: storagePath })
+                .eq('id', savedCard.id);
+            }
+          } catch (compressErr) {
+            console.error('Failed to compress/upload single-card image:', compressErr);
           }
-        } catch (cropErr) {
-          console.error(`Failed to crop/upload image for card ${savedCard.id}:`, cropErr);
+        }
+      } else {
+        // Multi-card — crop each card from its grid cell
+        for (const card of aiResult.cards) {
+          const savedCard = savedCards?.find((sc) => sc.card_index === card.card_index);
+          if (!savedCard) continue;
+
+          const cellWidth = imgWidth / aiResult.grid_cols;
+          const cellHeight = imgHeight / aiResult.grid_rows;
+          const baseX = card.grid_col * cellWidth;
+          const baseY = card.grid_row * cellHeight;
+
+          // 5% inward padding (matches client-side CroppedCardThumbnail)
+          const padX = cellWidth * 0.05;
+          const padY = cellHeight * 0.05;
+
+          const left = Math.max(0, Math.round(baseX + padX));
+          const top = Math.max(0, Math.round(baseY + padY));
+          const width = Math.min(Math.round(cellWidth - padX * 2), imgWidth - left);
+          const height = Math.min(Math.round(cellHeight - padY * 2), imgHeight - top);
+
+          if (width <= 0 || height <= 0) continue;
+
+          try {
+            const croppedBuffer = await sharp(rotatedImageBuffer)
+              .extract({ left, top, width, height })
+              .resize(400, 400, { fit: 'inside' })
+              .jpeg({ quality: 85 })
+              .toBuffer();
+
+            const storagePath = await uploadCardImageServer(supabase, croppedBuffer, user.id, savedCard.id);
+            if (storagePath) {
+              await supabase
+                .from('card_results')
+                .update({ image_path: storagePath })
+                .eq('id', savedCard.id);
+            }
+          } catch (cropErr) {
+            console.error(`Failed to crop/upload image for card ${savedCard.id}:`, cropErr);
+          }
         }
       }
     } catch (imgErr) {
