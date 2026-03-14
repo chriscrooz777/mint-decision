@@ -109,7 +109,7 @@ export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSa
           <button
             onClick={handleRemoveAll}
             disabled={isRemovingAll}
-            className="w-full font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm bg-red-50 text-danger border border-red-200 hover:bg-red-100"
+            className="w-full font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm bg-red-950/30 text-danger border border-red-800/50 hover:bg-red-950/50"
           >
             {isRemovingAll ? (
               <>
@@ -156,8 +156,8 @@ export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSa
       )}
 
       {/* Disclaimer */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-        <p className="text-xs text-amber-800 leading-relaxed">
+      <div className="bg-amber-950/30 border border-amber-800/50 rounded-xl p-3">
+        <p className="text-xs text-amber-400 leading-relaxed">
           <strong>Disclaimer:</strong> {DISCLAIMER_TEXT}
         </p>
       </div>

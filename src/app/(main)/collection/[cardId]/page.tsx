@@ -46,21 +46,21 @@ const recommendationLabel: Record<string, string> = {
 };
 
 const recommendationColor: Record<string, string> = {
-  yes: 'text-emerald-600',
-  no: 'text-red-500',
-  maybe: 'text-amber-500',
+  yes: 'text-emerald-400',
+  no: 'text-red-400',
+  maybe: 'text-amber-400',
 };
 
 const recommendationBannerBg: Record<string, string> = {
-  yes: 'bg-emerald-50',
-  no: 'bg-red-50',
-  maybe: 'bg-amber-50',
+  yes: 'bg-emerald-950/30',
+  no: 'bg-red-950/30',
+  maybe: 'bg-amber-950/30',
 };
 
 const recommendationBorder: Record<string, string> = {
-  yes: 'border-emerald-200',
-  no: 'border-red-200',
-  maybe: 'border-amber-200',
+  yes: 'border-emerald-800/50',
+  no: 'border-red-800/50',
+  maybe: 'border-amber-800/50',
 };
 
 export default function CollectionCardDetailPage() {
@@ -157,8 +157,8 @@ export default function CollectionCardDetailPage() {
           </svg>
           Collection
         </Link>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-          <p className="text-sm text-red-700">{error || 'Card not found'}</p>
+        <div className="bg-red-950/30 border border-red-800/50 rounded-xl p-4 text-center">
+          <p className="text-sm text-red-400">{error || 'Card not found'}</p>
         </div>
       </div>
     );
@@ -205,7 +205,7 @@ export default function CollectionCardDetailPage() {
                 {/* Arrow buttons */}
                 <button
                   onClick={() => setImageIndex(imageIndex === 0 ? 1 : 0)}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-colors"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm shadow flex items-center justify-center hover:bg-black/70 transition-colors"
                   aria-label="Previous image"
                 >
                   <svg className="w-4 h-4 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +214,7 @@ export default function CollectionCardDetailPage() {
                 </button>
                 <button
                   onClick={() => setImageIndex(imageIndex === 0 ? 1 : 0)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm shadow flex items-center justify-center hover:bg-black/70 transition-colors"
                   aria-label="Next image"
                 >
                   <svg className="w-4 h-4 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,7 +441,7 @@ export default function CollectionCardDetailPage() {
         {isSingleScan && card.gradedValueLow != null && card.gradedValueHigh != null && (
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
             <p className="text-xs text-muted font-medium">Estimated PSA Graded Value</p>
-            <p className="text-lg font-bold text-emerald-600">
+            <p className="text-lg font-bold text-emerald-400">
               {formatPriceRange(card.gradedValueLow, card.gradedValueHigh)}
             </p>
           </div>

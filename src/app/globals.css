@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #0f172a;
+  --background: #0f172a;
+  --foreground: #f1f5f9;
   --primary: #2563eb;
   --primary-dark: #1d4ed8;
-  --primary-light: #dbeafe;
+  --primary-light: #1e3a8a;
   --secondary: #10b981;
   --accent: #f59e0b;
   --danger: #ef4444;
-  --muted: #64748b;
-  --muted-light: #f1f5f9;
-  --border: #e2e8f0;
-  --card: #ffffff;
+  --muted: #94a3b8;
+  --muted-light: #1e293b;
+  --border: #334155;
+  --card: #1e293b;
 }
 
 @theme inline {
@@ -64,11 +64,11 @@ html, body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--muted-light);
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--muted);
+  background: var(--border);
   border-radius: 3px;
 }
 
@@ -80,4 +80,18 @@ html, body {
 /* Swipeable card — prevent global transition from interfering with transform */
 .swipeable-no-transition {
   transition: none !important;
+}
+
+/* Activity ticker — infinite horizontal scroll */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker-scroll 103s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
 }

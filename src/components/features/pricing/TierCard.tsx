@@ -86,7 +86,7 @@ export default function TierCard({ config, currentTier, onSelect }: TierCardProp
           {config.price === 0 ? 'Downgrade' : 'Upgrade'}
         </button>
       ) : (
-        <div className="w-full py-2.5 rounded-xl text-sm font-semibold text-center text-secondary bg-emerald-50">
+        <div className="w-full py-2.5 rounded-xl text-sm font-semibold text-center text-secondary bg-emerald-900/30">
           Active
         </div>
       )}

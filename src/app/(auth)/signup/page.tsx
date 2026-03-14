@@ -59,7 +59,7 @@ export default function SignupPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold mb-2">Check your email</h1>
+        <h1 className="text-2xl font-bold mb-2">Check Your Email</h1>
         <p className="text-muted text-sm max-w-xs">
           We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.
         </p>
@@ -76,13 +76,10 @@ export default function SignupPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/mint-logo2.png" alt="Mint Decision" className="w-12 h-12 object-contain mx-auto mb-4" />
           </Link>
-          <h1 className="text-2xl font-bold">Create your account</h1>
+          <h1 className="text-2xl font-bold">Create Your Account</h1>
           <p className="text-muted text-sm mt-1">Start evaluating your cards with {APP_NAME}</p>
         </div>
 

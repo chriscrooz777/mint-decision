@@ -182,8 +182,8 @@ export default function MultiScanPage() {
       />
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="bg-red-950/30 border border-red-800/50 rounded-xl p-3">
+          <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
 
@@ -198,7 +198,7 @@ export default function MultiScanPage() {
 
       {/* Tips */}
       <div className="bg-muted-light rounded-xl p-4">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-muted mb-2">Tips for best results</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wide text-muted mb-2">Tips for Best Results</h3>
         <ul className="space-y-1.5 text-xs text-muted">
           <li className="flex items-start gap-2">
             <span className="text-primary mt-0.5">•</span>

@@ -103,7 +103,7 @@ export default function ScanDrawer({ isOpen, onClose }: ScanDrawerProps) {
               onClick={onClose}
               className="group flex items-start gap-4 bg-card rounded-2xl border-2 border-border p-4 hover:border-primary transition-colors"
             >
-              <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
+              <div className="w-12 h-12 bg-amber-950/30 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
                 <svg
                   className="w-6 h-6 text-accent group-hover:text-white transition-colors"
                   fill="none"
@@ -124,7 +124,7 @@ export default function ScanDrawer({ isOpen, onClose }: ScanDrawerProps) {
                   Detailed PSA grading analysis with centering, corners, edges, and surface scoring.
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs bg-amber-50 text-amber-700 font-semibold px-2.5 py-1 rounded-full">
+                  <span className="text-xs bg-amber-950/30 text-amber-400 font-semibold px-2.5 py-1 rounded-full">
                     1 card
                   </span>
                   <span className="text-xs bg-muted-light text-muted font-semibold px-2.5 py-1 rounded-full">
