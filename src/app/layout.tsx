@@ -39,7 +39,7 @@ export const metadata: Metadata = {
       'Photograph your sports cards and get instant AI-powered identification, valuation, and PSA grading recommendations. Supports MLB, NBA, NFL, NHL, golf, Pokémon, and more.',
     images: [
       {
-        url: '/opengraph-image',
+        url: '/open-graph-img.png',
         width: 1200,
         height: 630,
         alt: 'Mint Decision — AI Sports Card Grading & Valuation',
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     title: 'Mint Decision — AI Sports Card Grading & Valuation',
     description:
       'Photograph your sports cards and get instant AI-powered identification, valuation, and PSA grading recommendations.',
-    images: ['/opengraph-image'],
+    images: ['/open-graph-img.png'],
   },
 };
 
