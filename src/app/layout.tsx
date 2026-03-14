@@ -12,6 +12,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mintdecision.com';
+
 export const metadata: Metadata = {
   title: "Mint Decision — AI Sports Card Grading & Valuation",
   description:
@@ -27,6 +29,30 @@ export const metadata: Metadata = {
     "Pokémon cards",
     "junk wax era",
   ],
+  metadataBase: new URL(siteUrl),
+  openGraph: {
+    type: 'website',
+    url: siteUrl,
+    siteName: 'Mint Decision',
+    title: 'Mint Decision — AI Sports Card Grading & Valuation',
+    description:
+      'Photograph your sports cards and get instant AI-powered identification, valuation, and PSA grading recommendations. Supports MLB, NBA, NFL, NHL, golf, Pokémon, and more.',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'Mint Decision — AI Sports Card Grading & Valuation',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mint Decision — AI Sports Card Grading & Valuation',
+    description:
+      'Photograph your sports cards and get instant AI-powered identification, valuation, and PSA grading recommendations.',
+    images: ['/opengraph-image'],
+  },
 };
 
 export const viewport: Viewport = {

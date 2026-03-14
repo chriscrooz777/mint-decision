@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
       'AI-powered sports card identification, valuation, and PSA grading recommendations.',
     start_url: '/scan',
     display: 'standalone',
-    background_color: '#fafafa',
+    background_color: '#0f172a',
     theme_color: '#2563eb',
     icons: [
       {
