@@ -57,7 +57,8 @@ src/
   components/
     features/
       scan/           CardResultCard, MultiCardResults, SingleCardResults,
-                      CroppedCardThumbnail, ScanDrawer, ImageUploader, etc.
+                      CroppedCardThumbnail, ScanDrawer, ScanCommunityFeed,
+                      ImageUploader, etc.
       collection/     SwipeableCard (swipe-to-delete gesture)
       pricing/        PlanChangeModal, TierCard, UsageMeter
     layout/           AppShell, Header, BottomNav
@@ -189,6 +190,30 @@ Both AI prompts follow this hierarchy:
 | #3 | (merged into #2 context) | eBay-first pricing methodology added to both AI prompts |
 | #4 | `feature/explicit-save-collection` | Collection only shows explicitly saved cards; save button → "Saved ✓" + trash; Save All → Remove All; DELETE unsaves instead of deleting scan history |
 | #5 | `feature/image-rotation-single-card-fix` | Fix image rotation via EXIF `.rotate()`; skip crop for single-card scans; compress to ≤2 MB instead |
+| #6 | `feature/dark-theme-qa-network-effect` | Full dark theme audit (replaced all hardcoded light Tailwind colors with dark opacity variants); logo updated to `mint-logo2.png`; `hero-badge.png` added; PlanChangeModal flash bug fixed (all flows open in confirm state); standard title case applied sitewide; `ScanCommunityFeed` component added to scan hub with live ticker, scan count, and top finds grid |
+
+---
+
+## Dark Theme Conventions
+
+The entire app uses a dark theme via CSS custom property tokens (`--background`, `--card`, `--border`, `--muted`, etc.) defined in `globals.css`. Always use these semantic Tailwind classes — never hardcoded light colors.
+
+### Correct dark-friendly color patterns
+
+| Use case | Correct class | Never use |
+|---|---|---|
+| Amber/warning bg | `bg-amber-950/30 border-amber-800/50 text-amber-400` | `bg-amber-50 text-amber-800` |
+| Red/danger bg | `bg-red-950/30 border-red-800/50 text-red-400` | `bg-red-50 text-red-700` |
+| Green/success bg | `bg-emerald-900/30 text-emerald-400` | `bg-emerald-100 text-emerald-700` |
+| Blue/info bg | `bg-blue-950/30 border-blue-800/50 text-blue-400` | `bg-blue-50 text-blue-600` |
+
+### Logo and assets
+- Logo file: `public/mint-logo2.png` — used in `Header.tsx`, landing nav, `login/page.tsx`, `signup/page.tsx`
+- Hero badge: `public/hero-badge.png` — used on landing page
+
+### UI text conventions
+- All headings and titles use **standard English title case** (prepositions like "for", "to", "in", "of" stay lowercase; all content words capitalize)
+- No periods at the end of titles or headings
 
 ---
 
@@ -200,6 +225,8 @@ Both AI prompts follow this hierarchy:
 - **Netlify + Next.js**: Publish directory must be `.next`, not blank, not `/`. The `@netlify/plugin-nextjs` handles the rest.
 - **`maxDuration = 60`**: Set on scan API routes because GPT-4o Vision calls can take 10–30s. Without it, Netlify's default 10s timeout kills the request.
 - **Free tier cleanup**: `cleanupFreeResults` deletes old `card_results` rows but never touches `collection_cards`. If a user saves a card then gets cleaned up, the `collection_cards` row stays but the `card_result` is gone — the collection query handles this gracefully via the `.in()` filter returning nothing for missing IDs.
+- **ScanCommunityFeed seed data**: `src/app/(main)/scan/page.tsx` has a `SEED_SCANS` array used as fallback when the DB has fewer than 10 qualifying results (same pattern as the landing page `ActivityTicker`). The `totalToday` count adds a +47 offset so the number isn't 0 on fresh installs.
+- **PlanChangeModal flow**: Always opens in `'confirm'` state regardless of upgrade/downgrade direction. The `useEffect` that auto-triggers `processChange()` only fires when `state === 'processing'`, which only happens after the user explicitly clicks Confirm/Upgrade/Downgrade.
 
 ---
 
