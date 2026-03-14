@@ -81,3 +81,17 @@ html, body {
 .swipeable-no-transition {
   transition: none !important;
 }
+
+/* Activity ticker — infinite horizontal scroll */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker-scroll 55s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
