@@ -182,8 +182,8 @@ export default function CollectionPage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="bg-red-950/30 border border-red-800/50 rounded-xl p-3">
+          <p className="text-sm text-red-400">{error}</p>
           {error.includes('Pro') && (
             <Link
               href="/pricing"
@@ -215,7 +215,7 @@ export default function CollectionPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <h3 className="font-bold text-sm mb-1">No saved cards yet</h3>
+          <h3 className="font-bold text-sm mb-1">No Saved Cards Yet</h3>
           <p className="text-xs text-muted mb-4">
             Scan your cards and tap Save to build your collection.
           </p>
@@ -281,7 +281,7 @@ export default function CollectionPage() {
                   </p>
                   {/* Deep eval: show PSA grade in green lozenge */}
                   {card.estimated_psa_grade_low != null && card.estimated_psa_grade_high != null && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-100 text-green-700">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-900/30 text-green-400">
                       {formatGradeRange(card.estimated_psa_grade_low, card.estimated_psa_grade_high)}
                     </span>
                   )}
@@ -290,10 +290,10 @@ export default function CollectionPage() {
                     <span
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
                         card.psa_recommendation === 'yes'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-green-900/30 text-green-400'
                           : card.psa_recommendation === 'maybe'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-red-100 text-red-700'
+                          ? 'bg-amber-900/30 text-amber-400'
+                          : 'bg-red-900/30 text-red-400'
                       }`}
                     >
                       PSA: {card.psa_recommendation === 'yes' ? 'Yes' : card.psa_recommendation === 'maybe' ? 'Maybe' : 'No'}

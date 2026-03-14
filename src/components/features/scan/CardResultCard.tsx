@@ -22,9 +22,9 @@ const recommendationLabel: Record<string, string> = {
 };
 
 const recommendationColor: Record<string, string> = {
-  yes: 'text-emerald-600',
-  no: 'text-red-500',
-  maybe: 'text-amber-500',
+  yes: 'text-emerald-400',
+  no: 'text-red-400',
+  maybe: 'text-amber-400',
 };
 
 export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveToCollection, onUnsaveFromCollection, isSaved }: CardResultCardProps) {
@@ -68,7 +68,7 @@ export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveT
               </span>
             )}
             {card.confidence !== 'high' && (
-              <span className="text-xs bg-amber-50 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-amber-950/30 text-amber-400 font-semibold px-2 py-0.5 rounded-full">
                 {card.confidence} confidence
               </span>
             )}
@@ -112,7 +112,7 @@ export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveT
         </button>
         {isSaved ? (
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+            <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>

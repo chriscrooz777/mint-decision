@@ -64,10 +64,10 @@ function GradeBar({
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 9) return 'text-emerald-600';
-  if (score >= 7) return 'text-blue-600';
-  if (score >= 5) return 'text-amber-600';
-  return 'text-red-600';
+  if (score >= 9) return 'text-emerald-400';
+  if (score >= 7) return 'text-blue-400';
+  if (score >= 5) return 'text-amber-400';
+  return 'text-red-400';
 }
 
 function getBarColor(score: number): string {

@@ -142,8 +142,8 @@ export default function UpgradeCardPage() {
           </svg>
           Back to Card
         </button>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-          <p className="text-sm text-red-700">{error || 'Card not found'}</p>
+        <div className="bg-red-950/30 border border-red-800/50 rounded-xl p-4 text-center">
+          <p className="text-sm text-red-400">{error || 'Card not found'}</p>
         </div>
       </div>
     );
@@ -228,11 +228,11 @@ export default function UpgradeCardPage() {
 
       {/* Back image tip */}
       {!backBase64 && frontBase64 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start gap-2">
-          <svg className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-blue-950/30 border border-blue-800/50 rounded-xl p-3 flex items-start gap-2">
+          <svg className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="text-xs text-blue-800">
+          <p className="text-xs text-blue-300">
             Adding the back of the card improves grading accuracy, especially for centering assessment.
           </p>
         </div>
@@ -240,8 +240,8 @@ export default function UpgradeCardPage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="bg-red-950/30 border border-red-800/50 rounded-xl p-3">
+          <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
 

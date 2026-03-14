@@ -39,19 +39,15 @@ export default function PlanChangeModal({
   const direction = targetTier ? getDirection(currentTier, targetTier) : 'upgrade';
   const targetName = targetTier ? TIER_CONFIGS[targetTier].name : '';
 
-  // Reset state when modal opens
+  // Reset state when modal opens — always show confirm first
   useEffect(() => {
     if (isOpen && targetTier) {
       setErrorMsg('');
-      if (direction === 'downgrade-free') {
-        setState('confirm');
-      } else {
-        setState('processing');
-      }
+      setState('confirm');
     }
   }, [isOpen, targetTier, direction]);
 
-  // Auto-start processing for upgrade/downgrade (non-free)
+  // Auto-start processing only when explicitly triggered (not on confirm)
   useEffect(() => {
     if (isOpen && state === 'processing' && targetTier) {
       processChange();
@@ -89,7 +85,7 @@ export default function PlanChangeModal({
     }
   }, [targetTier]);
 
-  const handleConfirmDowngrade = () => {
+  const handleConfirm = () => {
     setState('processing');
   };
 
@@ -100,11 +96,7 @@ export default function PlanChangeModal({
 
   const handleRetry = () => {
     setErrorMsg('');
-    if (direction === 'downgrade-free') {
-      setState('confirm');
-    } else {
-      setState('processing');
-    }
+    setState('confirm');
   };
 
   // Prevent backdrop close during processing
@@ -116,20 +108,44 @@ export default function PlanChangeModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose}>
       <div className="text-center py-2">
-        {/* ─── Confirm State (downgrade to free only) ─── */}
+        {/* ─── Confirm State (all directions) ─── */}
         {state === 'confirm' && (
           <div className="space-y-4">
-            {/* Warning icon */}
-            <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-              <svg className="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
+            {/* Icon */}
+            {direction === 'upgrade' ? (
+              <div className="w-14 h-14 bg-primary-light rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+              </div>
+            ) : direction === 'downgrade-free' ? (
+              <div className="w-14 h-14 bg-amber-900/30 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+            ) : (
+              <div className="w-14 h-14 bg-muted-light rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-7 h-7 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+              </div>
+            )}
 
             <div>
-              <h3 className="text-lg font-bold">Downgrade to Free?</h3>
+              <h3 className="text-lg font-bold">
+                {direction === 'upgrade'
+                  ? `Upgrade to ${targetName}?`
+                  : direction === 'downgrade-free'
+                    ? 'Downgrade to Free?'
+                    : `Switch to ${targetName}?`}
+              </h3>
               <p className="text-sm text-muted mt-2 leading-relaxed">
-                This will remove your saved collection and limit you to your 5 most recent scan results. This action cannot be undone.
+                {direction === 'upgrade'
+                  ? `You'll be switched to the ${targetName} plan immediately.`
+                  : direction === 'downgrade-free'
+                    ? 'This will remove your saved collection and limit you to your 5 most recent scan results. This action cannot be undone.'
+                    : `You'll be switched to the ${targetName} plan immediately.`}
               </p>
             </div>
 
@@ -141,10 +157,14 @@ export default function PlanChangeModal({
                 Cancel
               </button>
               <button
-                onClick={handleConfirmDowngrade}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
+                onClick={handleConfirm}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  direction === 'downgrade-free'
+                    ? 'bg-red-500 text-white hover:bg-red-600'
+                    : 'bg-primary text-white hover:bg-primary-dark'
+                }`}
               >
-                Downgrade
+                {direction === 'upgrade' ? 'Confirm Upgrade' : direction === 'downgrade-free' ? 'Downgrade' : 'Confirm'}
               </button>
             </div>
           </div>
@@ -164,10 +184,10 @@ export default function PlanChangeModal({
             <div>
               <h3 className="text-lg font-bold">
                 {direction === 'upgrade'
-                  ? 'Processing Payment...'
+                  ? 'Processing Payment'
                   : direction === 'downgrade-free'
-                    ? 'Downgrading Plan...'
-                    : 'Updating Plan...'}
+                    ? 'Downgrading Plan'
+                    : 'Updating Plan'}
               </h3>
               <p className="text-sm text-muted mt-1">This will only take a moment</p>
             </div>
@@ -198,8 +218,8 @@ export default function PlanChangeModal({
               )}
 
               {/* Green checkmark circle */}
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto animate-success-scale">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto animate-success-scale">
+                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -235,8 +255,8 @@ export default function PlanChangeModal({
         {state === 'error' && (
           <div className="space-y-4 py-4">
             {/* Error icon */}
-            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-              <svg className="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-14 h-14 bg-red-900/30 rounded-full flex items-center justify-center mx-auto">
+              <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>

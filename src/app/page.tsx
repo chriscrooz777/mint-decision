@@ -67,16 +67,15 @@ async function getTickerScans(): Promise<ScanItem[]> {
 export default async function LandingPage() {
   const tickerScans = await getTickerScans();
   return (
-    <div className="min-h-screen flex flex-col bg-slate-900 text-white">
+    <div className="min-h-screen flex flex-col bg-slate-900 text-white"
+      style={{ background: 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(37,99,235,0.22) 0%, transparent 65%), #0f172a' }}
+    >
 
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4">
+      <nav className="flex items-center justify-between px-6 py-4 bg-slate-900">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-md">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/mint-logo2.png" alt="Mint Decision" className="w-8 h-8 object-contain" />
           <span className="font-bold text-white tracking-tight">{APP_NAME}</span>
         </div>
         <Link
@@ -87,10 +86,22 @@ export default async function LandingPage() {
         </Link>
       </nav>
 
+      {/* Activity ticker — above hero */}
+      <ActivityTicker items={tickerScans} />
+
       {/* Hero */}
-      <main className="flex-1 flex flex-col items-center text-center px-6 pt-10 pb-20"
-        style={{ background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(37,99,235,0.25) 0%, transparent 70%)' }}
-      >
+      <main className="flex-1 flex flex-col items-center text-center px-6 pt-4 pb-20">
+
+        {/* Hero graphic */}
+        <div className="mb-8 select-none" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/hero-badge.png"
+            alt=""
+            className="w-56 h-56 object-contain"
+            style={{ mixBlendMode: 'screen' }}
+          />
+        </div>
 
         {/* Headline */}
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.1] mb-5 max-w-xs sm:max-w-sm">
@@ -99,34 +110,6 @@ export default async function LandingPage() {
         <p className="text-base text-slate-400 max-w-xs leading-relaxed mb-12">
           Snap a photo and get instant AI-powered identification, real market pricing, and PSA-style grade estimates.
         </p>
-
-        {/* Card stack illustration */}
-        <div className="relative h-52 w-48 mb-14 mx-auto select-none" aria-hidden="true">
-          {/* Back card */}
-          <div className="absolute top-6 left-12 w-36 h-48 bg-blue-900/50 rounded-2xl border border-blue-700/30 shadow-lg"
-            style={{ transform: 'rotate(14deg)' }} />
-          {/* Middle card */}
-          <div className="absolute top-3 left-6 w-36 h-48 bg-blue-800/60 rounded-2xl border border-blue-600/40 shadow-lg"
-            style={{ transform: 'rotate(7deg)' }} />
-          {/* Front card */}
-          <div className="absolute top-0 left-0 w-36 h-48 rounded-2xl border border-blue-400/50 shadow-2xl flex flex-col items-center justify-center gap-3"
-            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}>
-            <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-white font-bold text-sm tracking-widest text-center">MINT</p>
-              <p className="text-blue-200/80 text-xs text-center mt-0.5">PSA Est. 9</p>
-            </div>
-            <div className="flex gap-1.5 mt-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
-              <span className="w-1.5 h-1.5 rounded-full bg-white/50" />
-              <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
-            </div>
-          </div>
-        </div>
 
         {/* CTA buttons */}
         <div className="flex flex-col gap-3 w-full max-w-xs">
@@ -146,9 +129,6 @@ export default async function LandingPage() {
 
         <p className="mt-5 text-xs text-slate-600">Free to start — no credit card required</p>
       </main>
-
-      {/* Activity ticker */}
-      <ActivityTicker items={tickerScans} />
 
       {/* Features */}
       <section className="px-6 py-14 bg-slate-800/40">

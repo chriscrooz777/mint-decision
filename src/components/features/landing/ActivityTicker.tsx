@@ -32,7 +32,7 @@ export default function ActivityTicker({ items }: { items: ScanItem[] }) {
   const doubled = [...items, ...items];
 
   return (
-    <div className="w-full overflow-hidden py-4 border-y border-slate-800 bg-slate-900/80"
+    <div className="w-full overflow-hidden py-4"
       style={{
         WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
         maskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
@@ -45,7 +45,7 @@ export default function ActivityTicker({ items }: { items: ScanItem[] }) {
         {doubled.map((item, i) => (
           <div
             key={`${item.id}-${i}`}
-            className="flex items-center gap-2 bg-slate-800/70 border border-slate-700/40 rounded-full px-3.5 py-1.5 whitespace-nowrap shrink-0"
+            className="flex items-center gap-2 bg-slate-950/65 border border-slate-500/70 rounded-full px-3.5 py-1.5 whitespace-nowrap shrink-0"
           >
             <span className={`text-[10px] font-bold tracking-wide ${sportColors[item.sport] ?? 'text-slate-400'}`}>
               {item.sport}

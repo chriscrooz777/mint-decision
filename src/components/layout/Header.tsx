@@ -8,21 +8,8 @@ export default function Header() {
     <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
       <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/scan" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/mint-logo2.png" alt="Mint Decision" className="w-8 h-8 object-contain" />
           <span className="text-lg font-bold tracking-tight">{APP_NAME}</span>
         </Link>
 

@@ -30,7 +30,7 @@ export default function ScanLoadingState({ type = 'multi' }: { type?: 'multi' | 
       </div>
 
       <h2 className="text-lg font-bold mb-2">
-        {type === 'multi' ? 'Analyzing Your Cards...' : 'Evaluating Card...'}
+        {type === 'multi' ? 'Analyzing Your Cards' : 'Evaluating Card'}
       </h2>
       <p className="text-sm text-muted text-center max-w-xs">
         {type === 'multi'
