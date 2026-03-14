@@ -252,7 +252,7 @@ export default function UpgradeCardPage() {
         size="lg"
         disabled={!frontBase64}
       >
-        Upgrade Card
+        Evaluate Card
       </Button>
     </div>
   );
