@@ -190,13 +190,24 @@ Both AI prompts follow this hierarchy:
 | #3 | (merged into #2 context) | eBay-first pricing methodology added to both AI prompts |
 | #4 | `feature/explicit-save-collection` | Collection only shows explicitly saved cards; save button → "Saved ✓" + trash; Save All → Remove All; DELETE unsaves instead of deleting scan history |
 | #5 | `feature/image-rotation-single-card-fix` | Fix image rotation via EXIF `.rotate()`; skip crop for single-card scans; compress to ≤2 MB instead |
-| #6 | `feature/dark-theme-qa-network-effect` | Full dark theme audit (replaced all hardcoded light Tailwind colors with dark opacity variants); logo updated to `mint-logo2.png`; `hero-badge.png` added; PlanChangeModal flash bug fixed (all flows open in confirm state); standard title case applied sitewide; `ScanCommunityFeed` component added to scan hub with live ticker, scan count, and top finds grid |
+| #6 | `feature/dark-theme-qa-network-effect` | Full dark theme audit; logo → `mint-logo2.png`; PlanChangeModal confirm-first fix; title case sitewide; `ScanCommunityFeed` on scan hub; favicon + PWA icons + static OG image; WCAG AA contrast pass (brighter primary, visible tags/badges, progress bar track, PSA recommendation badges with colored borders) |
 
 ---
 
 ## Dark Theme Conventions
 
 The entire app uses a dark theme via CSS custom property tokens (`--background`, `--card`, `--border`, `--muted`, etc.) defined in `globals.css`. Always use these semantic Tailwind classes — never hardcoded light colors.
+
+### Color token values (globals.css)
+
+| Token | Value | Usage |
+|---|---|---|
+| `--primary` | `#3b82f6` | Blue text, active badges, primary actions |
+| `--primary-dark` | `#2563eb` | Button backgrounds (white text on this passes AA) |
+| `--primary-light` | `#1e3a8a` | Badge/card tint backgrounds — use `text-white` on this |
+| `--card` | `#1e293b` | Card backgrounds |
+| `--border` | `#334155` | Borders and tag/badge backgrounds |
+| `--muted` | `#94a3b8` | Secondary text — readable on `--background`, borderline on `--card` |
 
 ### Correct dark-friendly color patterns
 
@@ -206,14 +217,23 @@ The entire app uses a dark theme via CSS custom property tokens (`--background`,
 | Red/danger bg | `bg-red-950/30 border-red-800/50 text-red-400` | `bg-red-50 text-red-700` |
 | Green/success bg | `bg-emerald-900/30 text-emerald-400` | `bg-emerald-100 text-emerald-700` |
 | Blue/info bg | `bg-blue-950/30 border-blue-800/50 text-blue-400` | `bg-blue-50 text-blue-600` |
+| Sport/set tags | `bg-border text-slate-300` | `bg-muted-light text-muted` (invisible on card bg) |
+| PSA rec badges | `bg-emerald/amber/red-900/40 text-*-400 border border-*-800/60` | bare text-only with no bg |
+| Inactive buttons | `bg-border text-foreground hover:bg-slate-600` | `bg-muted-light text-muted` (invisible on card bg) |
+| Progress bar track | `bg-slate-700` | `bg-muted-light` (same color as card bg — invisible) |
+| Text on primary-light bg | `text-white` or `text-blue-200` | `text-primary` (fails contrast on dark blue bg) |
 
 ### Logo and assets
 - Logo file: `public/mint-logo2.png` — used in `Header.tsx`, landing nav, `login/page.tsx`, `signup/page.tsx`
 - Hero badge: `public/hero-badge.png` — used on landing page
+- OG image: `public/open-graph-img.png` (1200×630 static PNG)
+- Favicon: `src/app/icon.png` (32px), `src/app/apple-icon.png` (180px), auto-wired by Next.js App Router
+- PWA icons: `public/icons/icon-192x192.png`, `public/icons/icon-512x512.png`
 
 ### UI text conventions
 - All headings and titles use **standard English title case** (prepositions like "for", "to", "in", "of" stay lowercase; all content words capitalize)
 - No periods at the end of titles or headings
+- Tagline: **"Know your cards."**
 
 ---
 
