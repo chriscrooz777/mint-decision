@@ -61,7 +61,7 @@ src/
                       ImageUploader, etc.
       collection/     SwipeableCard (swipe-to-delete gesture)
       pricing/        PlanChangeModal, TierCard, UsageMeter
-    layout/           AppShell, Header, BottomNav
+    layout/           AppShell, Header, NavMenu (BottomNav removed)
     ui/               Button, Badge, Modal, Skeleton
   lib/
     openai/
@@ -191,6 +191,7 @@ Both AI prompts follow this hierarchy:
 | #4 | `feature/explicit-save-collection` | Collection only shows explicitly saved cards; save button → "Saved ✓" + trash; Save All → Remove All; DELETE unsaves instead of deleting scan history |
 | #5 | `feature/image-rotation-single-card-fix` | Fix image rotation via EXIF `.rotate()`; skip crop for single-card scans; compress to ≤2 MB instead |
 | #6 | `feature/dark-theme-qa-network-effect` | Full dark theme audit; logo → `mint-logo2.png`; PlanChangeModal confirm-first fix; title case sitewide; `ScanCommunityFeed` on scan hub; favicon + PWA icons + static OG image; WCAG AA contrast pass (brighter primary, visible tags/badges, progress bar track, PSA recommendation badges with colored borders) |
+| #7 | `feature/hamburger-nav-cta-update` | Replace bottom tab bar with hamburger menu (right drawer on desktop, bottom sheet on mobile); `NavMenu` component with smooth slide animation; update `MultiCardResults` bottom CTAs to side-by-side Done + Select All |
 
 ---
 
@@ -223,6 +224,17 @@ The entire app uses a dark theme via CSS custom property tokens (`--background`,
 | Progress bar track | `bg-slate-700` | `bg-muted-light` (same color as card bg — invisible) |
 | Text on primary-light bg | `text-white` or `text-blue-200` | `text-primary` (fails contrast on dark blue bg) |
 
+### Navigation
+
+- **No bottom tab bar** — `BottomNav.tsx` exists but is not used. Navigation lives entirely in `NavMenu`.
+- **`NavMenu.tsx`** — slide-out panel triggered by the hamburger `≡` button in the header.
+  - Desktop (`md+`): right-side drawer (`translate-x-full` → `translate-x-0`), `w-80`, rounded left edge
+  - Mobile: bottom sheet (`translate-y-full` → `translate-y-0`), drag handle, rounded top corners
+  - Background: `#070d1a` — noticeably darker than `--background` (`#0f172a`) for contrast
+  - Nav items: Scan, Collection, Pricing, Account — each with icon + description + active dot
+  - Closes on link click, Escape key, or backdrop tap; locks body scroll while open
+- **`AppShell.tsx`** — only renders `<Header>` + `<main>`; bottom padding is `pb-10` (no nav bar to clear)
+
 ### Logo and assets
 - Logo file: `public/mint-logo2.png` — used in `Header.tsx`, landing nav, `login/page.tsx`, `signup/page.tsx`
 - Hero badge: `public/hero-badge.png` — used on landing page
@@ -245,6 +257,7 @@ The entire app uses a dark theme via CSS custom property tokens (`--background`,
 - **Netlify + Next.js**: Publish directory must be `.next`, not blank, not `/`. The `@netlify/plugin-nextjs` handles the rest.
 - **`maxDuration = 60`**: Set on scan API routes because GPT-4o Vision calls can take 10–30s. Without it, Netlify's default 10s timeout kills the request.
 - **Free tier cleanup**: `cleanupFreeResults` deletes old `card_results` rows but never touches `collection_cards`. If a user saves a card then gets cleaned up, the `collection_cards` row stays but the `card_result` is gone — the collection query handles this gracefully via the `.in()` filter returning nothing for missing IDs.
+- **Google OAuth domain lock**: The Supabase Google OAuth callback points to `jewiftozjidsgniqbhg.supabase.co` (the project URL). This means sign-in only completes on the production domain (`mintdecision.com`). You can browse the UI locally at `localhost:3000` without auth, but you cannot complete a sign-in flow locally. The app name in the Google consent screen ("to continue to…") is controlled by the **Google Auth Platform → Branding → App name** field in Google Cloud Console — it already reads "Mint Decision".
 - **ScanCommunityFeed seed data**: `src/app/(main)/scan/page.tsx` has a `SEED_SCANS` array used as fallback when the DB has fewer than 10 qualifying results (same pattern as the landing page `ActivityTicker`). The `totalToday` count adds a +47 offset so the number isn't 0 on fresh installs.
 - **PlanChangeModal flow**: Always opens in `'confirm'` state regardless of upgrade/downgrade direction. The `useEffect` that auto-triggers `processChange()` only fires when `state === 'processing'`, which only happens after the user explicitly clicks Confirm/Upgrade/Downgrade.
 
