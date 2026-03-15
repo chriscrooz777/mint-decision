@@ -22,7 +22,7 @@ export default function SingleCardResults({ card, onSaveToCollection, onUnsaveFr
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold">{card.playerName}</h2>
           {card.mintId && (
-            <span className="text-xs font-bold text-primary bg-primary-light px-2 py-0.5 rounded-full shrink-0">
+            <span className="text-xs font-bold text-white bg-primary px-2 py-0.5 rounded-full shrink-0">
               {formatMintId(card.mintId)}
             </span>
           )}
@@ -36,12 +36,12 @@ export default function SingleCardResults({ card, onSaveToCollection, onUnsaveFr
         </p>
         <div className="flex items-center gap-2 mt-2">
           {card.sport && card.sport !== 'unknown' && (
-            <span className="text-xs bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
               {card.sport}
             </span>
           )}
           {card.manufacturer && card.manufacturer !== 'unknown' && (
-            <span className="text-xs bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
               {card.manufacturer}
             </span>
           )}
@@ -50,10 +50,10 @@ export default function SingleCardResults({ card, onSaveToCollection, onUnsaveFr
 
       {/* PSA Grade Estimate */}
       <div className="bg-primary-light rounded-2xl p-5 text-center">
-        <p className="text-xs text-primary font-semibold uppercase tracking-wide mb-1">
+        <p className="text-xs text-blue-200 font-semibold uppercase tracking-wide mb-1">
           Estimated PSA Grade
         </p>
-        <p className="text-3xl font-extrabold text-primary">
+        <p className="text-3xl font-extrabold text-white">
           {formatGradeRange(card.estimatedPsaGradeLow, card.estimatedPsaGradeHigh)}
         </p>
       </div>
@@ -91,8 +91,8 @@ export default function SingleCardResults({ card, onSaveToCollection, onUnsaveFr
             </p>
           </div>
           <div className="bg-primary-light rounded-xl p-3 text-center">
-            <p className="text-xs text-primary mb-1">Graded Value</p>
-            <p className="text-sm font-bold text-primary">
+            <p className="text-xs text-blue-200 mb-1">Graded Value</p>
+            <p className="text-sm font-bold text-white">
               {card.gradedValueLow && card.gradedValueHigh
                 ? formatPriceRange(card.gradedValueLow, card.gradedValueHigh)
                 : 'N/A'}
@@ -146,7 +146,7 @@ export default function SingleCardResults({ card, onSaveToCollection, onUnsaveFr
               <button
                 onClick={onUnsaveFromCollection}
                 title="Remove from collection"
-                className="py-3 px-4 rounded-xl bg-muted-light text-muted hover:text-danger hover:bg-red-950/30 transition-colors"
+                className="py-3 px-4 rounded-xl bg-border text-slate-300 hover:text-danger hover:bg-red-950/30 transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

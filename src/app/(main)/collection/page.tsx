@@ -171,7 +171,7 @@ export default function CollectionPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 sortBy === opt.value
                   ? 'bg-primary text-white'
-                  : 'bg-muted-light text-muted hover:bg-border'
+                  : 'bg-border text-slate-300 hover:bg-slate-600'
               }`}
             >
               {opt.label}
@@ -288,12 +288,12 @@ export default function CollectionPage() {
                   {/* Multi scan: show PSA recommendation lozenge */}
                   {!card.estimated_psa_grade_low && card.psa_recommendation && (
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
                         card.psa_recommendation === 'yes'
-                          ? 'bg-green-900/30 text-green-400'
+                          ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/60'
                           : card.psa_recommendation === 'maybe'
-                          ? 'bg-amber-900/30 text-amber-400'
-                          : 'bg-red-900/30 text-red-400'
+                          ? 'bg-amber-900/40 text-amber-400 border-amber-800/60'
+                          : 'bg-red-900/40 text-red-400 border-red-800/60'
                       }`}
                     >
                       PSA: {card.psa_recommendation === 'yes' ? 'Yes' : card.psa_recommendation === 'maybe' ? 'Maybe' : 'No'}

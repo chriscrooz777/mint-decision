@@ -110,15 +110,15 @@ export default async function ScanHubPage() {
             </div>
             <div>
               <h2 className="text-lg font-bold">Quick Scan</h2>
-              <p className="text-sm text-muted mt-1">
+              <p className="text-sm text-slate-300 mt-1">
                 Photograph up to 9 cards at once. Get player names, estimated
                 values, and PSA submission recommendations.
               </p>
               <div className="flex items-center gap-2 mt-3">
-                <span className="text-xs bg-primary-light text-primary font-semibold px-2.5 py-1 rounded-full">
+                <span className="text-xs bg-primary text-white font-semibold px-2.5 py-1 rounded-full">
                   1-9 cards
                 </span>
-                <span className="text-xs bg-muted-light text-muted font-semibold px-2.5 py-1 rounded-full">
+                <span className="text-xs bg-border text-slate-300 font-semibold px-2.5 py-1 rounded-full">
                   Fast results
                 </span>
               </div>
@@ -149,7 +149,7 @@ export default async function ScanHubPage() {
             </div>
             <div>
               <h2 className="text-lg font-bold">Deep Evaluation</h2>
-              <p className="text-sm text-muted mt-1">
+              <p className="text-sm text-slate-300 mt-1">
                 Detailed PSA grading analysis for a single card. Upload front
                 and back for centering, corners, edges, and surface scoring.
               </p>
@@ -157,7 +157,7 @@ export default async function ScanHubPage() {
                 <span className="text-xs bg-amber-950/30 text-amber-400 font-semibold px-2.5 py-1 rounded-full">
                   1 card
                 </span>
-                <span className="text-xs bg-muted-light text-muted font-semibold px-2.5 py-1 rounded-full">
+                <span className="text-xs bg-border text-slate-300 font-semibold px-2.5 py-1 rounded-full">
                   Detailed grading
                 </span>
               </div>

@@ -21,10 +21,10 @@ const recommendationLabel: Record<string, string> = {
   maybe: 'Maybe',
 };
 
-const recommendationColor: Record<string, string> = {
-  yes: 'text-emerald-400',
-  no: 'text-red-400',
-  maybe: 'text-amber-400',
+const recommendationBadge: Record<string, string> = {
+  yes: 'bg-emerald-900/40 text-emerald-400 border border-emerald-800/60',
+  no: 'bg-red-900/40 text-red-400 border border-red-800/60',
+  maybe: 'bg-amber-900/40 text-amber-400 border border-amber-800/60',
 };
 
 export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveToCollection, onUnsaveFromCollection, isSaved }: CardResultCardProps) {
@@ -41,7 +41,7 @@ export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveT
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-base truncate">{card.playerName}</h3>
               {card.mintId && (
-                <span className="text-[10px] font-bold text-primary bg-primary-light px-1.5 py-0.5 rounded-full shrink-0">
+                <span className="text-[10px] font-bold text-white bg-primary px-1.5 py-0.5 rounded-full shrink-0">
                   {formatMintId(card.mintId)}
                 </span>
               )}
@@ -58,12 +58,12 @@ export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveT
           {/* Details */}
           <div className="flex items-center gap-2 flex-wrap">
             {card.sport && card.sport !== 'unknown' && (
-              <span className="text-xs bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
                 {card.sport}
               </span>
             )}
             {card.manufacturer && card.manufacturer !== 'unknown' && (
-              <span className="text-xs bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
                 {card.manufacturer}
               </span>
             )}
@@ -85,9 +85,9 @@ export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveT
           {/* PSA Recommendation */}
           <div>
             <p className="text-xs text-muted">PSA Recommendation</p>
-            <p className={`text-sm font-bold ${recommendationColor[card.psaRecommendation]}`}>
+            <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-md mt-0.5 ${recommendationBadge[card.psaRecommendation]}`}>
               {recommendationLabel[card.psaRecommendation]}
-            </p>
+            </span>
           </div>
         </div>
 
