@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { SingleCardResult } from '@/types/scan';
 import GradingBreakdown from './GradingBreakdown';
@@ -8,15 +9,69 @@ import { DISCLAIMER_TEXT, PRICING_SOURCES } from '@/lib/constants';
 
 interface SingleCardResultsProps {
   card: SingleCardResult;
+  /** Base64 data URL for the card front (e.g. "data:image/jpeg;base64,…"). Used immediately
+   *  after a scan so the image is visible before Storage upload completes. */
+  frontImageDataUrl?: string;
+  /** Base64 data URL for the card back — shown only when both sides are provided. */
+  backImageDataUrl?: string;
   onSaveToCollection?: () => void;
   onUnsaveFromCollection?: () => void;
   isSaved?: boolean;
   isFree?: boolean;
 }
 
-export default function SingleCardResults({ card, onSaveToCollection, onUnsaveFromCollection, isSaved, isFree }: SingleCardResultsProps) {
+export default function SingleCardResults({
+  card,
+  frontImageDataUrl,
+  backImageDataUrl,
+  onSaveToCollection,
+  onUnsaveFromCollection,
+  isSaved,
+  isFree,
+}: SingleCardResultsProps) {
+  const [imageTab, setImageTab] = useState<'front' | 'back'>('front');
+  const hasBack = !!frontImageDataUrl && !!backImageDataUrl;
+  const currentImageUrl =
+    imageTab === 'back' && hasBack ? backImageDataUrl : frontImageDataUrl;
+
   return (
     <div className="space-y-4">
+
+      {/* Card Image */}
+      {frontImageDataUrl && (
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+          <img
+            src={currentImageUrl}
+            alt={imageTab === 'back' ? `${card.playerName} back` : `${card.playerName} front`}
+            className="w-full max-h-72 object-contain"
+          />
+          {hasBack && (
+            <div className="flex items-center justify-center gap-2 px-4 py-3 border-t border-border">
+              <button
+                onClick={() => setImageTab('front')}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                  imageTab === 'front'
+                    ? 'bg-primary text-white'
+                    : 'bg-border text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                Front
+              </button>
+              <button
+                onClick={() => setImageTab('back')}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                  imageTab === 'back'
+                    ? 'bg-primary text-white'
+                    : 'bg-border text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                Back
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Card Identity */}
       <div className="bg-card rounded-2xl border border-border p-4">
         <div className="flex items-center gap-2">

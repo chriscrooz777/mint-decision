@@ -150,6 +150,16 @@ export default function SingleScanPage() {
         </div>
         <SingleCardResults
           card={singleResult}
+          frontImageDataUrl={
+            frontBase64 && frontMimeType
+              ? `data:${frontMimeType};base64,${frontBase64}`
+              : undefined
+          }
+          backImageDataUrl={
+            backBase64 && backMimeType
+              ? `data:${backMimeType};base64,${backBase64}`
+              : undefined
+          }
           onSaveToCollection={isFree ? undefined : handleSaveToCollection}
           onUnsaveFromCollection={isFree ? undefined : handleUnsaveFromCollection}
           isSaved={isSaved}
