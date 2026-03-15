@@ -21,10 +21,10 @@ const recommendationLabel: Record<string, string> = {
   maybe: 'Maybe',
 };
 
-const recommendationColor: Record<string, string> = {
-  yes: 'text-emerald-400',
-  no: 'text-red-400',
-  maybe: 'text-amber-400',
+const recommendationBadge: Record<string, string> = {
+  yes: 'bg-emerald-900/40 text-emerald-400 border border-emerald-800/60',
+  no: 'bg-red-900/40 text-red-400 border border-red-800/60',
+  maybe: 'bg-amber-900/40 text-amber-400 border border-amber-800/60',
 };
 
 export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveToCollection, onUnsaveFromCollection, isSaved }: CardResultCardProps) {
@@ -85,9 +85,9 @@ export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveT
           {/* PSA Recommendation */}
           <div>
             <p className="text-xs text-muted">PSA Recommendation</p>
-            <p className={`text-sm font-bold ${recommendationColor[card.psaRecommendation]}`}>
+            <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-md mt-0.5 ${recommendationBadge[card.psaRecommendation]}`}>
               {recommendationLabel[card.psaRecommendation]}
-            </p>
+            </span>
           </div>
         </div>
 
