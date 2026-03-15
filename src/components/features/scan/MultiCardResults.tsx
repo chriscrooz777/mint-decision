@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { CardResult, GridLayout } from '@/types/scan';
 import CardResultCard from './CardResultCard';
-import ScanDrawer from './ScanDrawer';
 import { DISCLAIMER_TEXT } from '@/lib/constants';
 
 interface MultiCardResultsProps {
@@ -19,7 +18,6 @@ interface MultiCardResultsProps {
 }
 
 export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSaveToCollection, onUnsaveFromCollection, onSaveAll, savedCards, isFree }: MultiCardResultsProps) {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSavingAll, setIsSavingAll] = useState(false);
   const yesCount = cards.filter((c) => c.psaRecommendation === 'yes').length;
   const maybeCount = cards.filter((c) => c.psaRecommendation === 'maybe').length;
@@ -103,13 +101,35 @@ export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSa
         </Link>
       )}
 
-      {/* Save All / Remove All — paid users only */}
-      {!isFree && onSaveAll && (
-        allSaved ? (
+      {/* Primary CTAs — Done + Select All */}
+      <div className="flex gap-3">
+        {/* Done — navigates to collection */}
+        <Link
+          href="/collection"
+          className="flex-1 flex items-center justify-center gap-2 font-semibold py-3.5 rounded-xl text-sm border border-border bg-card hover:bg-border transition-colors text-foreground"
+        >
+          <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Done
+        </Link>
+
+        {/* Select All / Remove All — paid users; or disabled prompt for free */}
+        {isFree ? (
+          <Link
+            href="/pricing"
+            className="flex-1 flex items-center justify-center gap-2 font-semibold py-3.5 rounded-xl text-sm bg-secondary text-white hover:opacity-90 shadow-sm transition-opacity"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            Select All
+          </Link>
+        ) : allSaved ? (
           <button
             onClick={handleRemoveAll}
             disabled={isRemovingAll}
-            className="w-full font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm bg-red-950/30 text-danger border border-red-800/50 hover:bg-red-950/50"
+            className="flex-1 flex items-center justify-center gap-2 font-semibold py-3.5 rounded-xl text-sm bg-red-950/30 text-danger border border-red-800/50 hover:bg-red-950/50 transition-colors"
           >
             {isRemovingAll ? (
               <>
@@ -124,15 +144,15 @@ export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSa
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Remove All {cards.length} Cards
+                Remove All
               </>
             )}
           </button>
         ) : (
           <button
             onClick={handleSaveAll}
-            disabled={isSavingAll}
-            className="w-full font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm bg-secondary text-white hover:opacity-90 shadow-sm"
+            disabled={isSavingAll || !onSaveAll}
+            className="flex-1 flex items-center justify-center gap-2 font-semibold py-3.5 rounded-xl text-sm bg-secondary text-white hover:opacity-90 shadow-sm transition-opacity disabled:opacity-50"
           >
             {isSavingAll ? (
               <>
@@ -147,13 +167,15 @@ export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSa
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
-                Save All {cards.length} Cards
-                {savedCount > 0 && ` (${savedCount} saved)`}
+                Select All
+                {savedCount > 0 && (
+                  <span className="text-white/70 font-normal">({savedCount}/{cards.length})</span>
+                )}
               </>
             )}
           </button>
-        )
-      )}
+        )}
+      </div>
 
       {/* Disclaimer */}
       <div className="bg-amber-950/30 border border-amber-800/50 rounded-xl p-3">
@@ -162,19 +184,6 @@ export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSa
         </p>
       </div>
 
-      {/* New Scan Button */}
-      <button
-        onClick={() => setIsDrawerOpen(true)}
-        className="w-full bg-primary text-white font-semibold py-3.5 rounded-xl shadow-sm hover:bg-primary-dark transition-colors text-base"
-      >
-        New Scan
-      </button>
-
-      {/* Scan Drawer */}
-      <ScanDrawer
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-      />
     </div>
   );
 }
