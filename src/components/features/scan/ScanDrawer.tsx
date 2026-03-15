@@ -87,10 +87,10 @@ export default function ScanDrawer({ isOpen, onClose }: ScanDrawerProps) {
                   Scan up to 9 cards at once for fast identification and pricing.
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs bg-primary-light text-primary font-semibold px-2.5 py-1 rounded-full">
+                  <span className="text-xs bg-primary text-white font-semibold px-2.5 py-1 rounded-full">
                     1-9 cards
                   </span>
-                  <span className="text-xs bg-muted-light text-muted font-semibold px-2.5 py-1 rounded-full">
+                  <span className="text-xs bg-border text-slate-300 font-semibold px-2.5 py-1 rounded-full">
                     Fast results
                   </span>
                 </div>
@@ -127,7 +127,7 @@ export default function ScanDrawer({ isOpen, onClose }: ScanDrawerProps) {
                   <span className="text-xs bg-amber-950/30 text-amber-400 font-semibold px-2.5 py-1 rounded-full">
                     1 card
                   </span>
-                  <span className="text-xs bg-muted-light text-muted font-semibold px-2.5 py-1 rounded-full">
+                  <span className="text-xs bg-border text-slate-300 font-semibold px-2.5 py-1 rounded-full">
                     Detailed grading
                   </span>
                 </div>

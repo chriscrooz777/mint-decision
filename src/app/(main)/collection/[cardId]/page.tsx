@@ -228,7 +228,7 @@ export default function CollectionCardDetailPage() {
                     className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors ${
                       imageIndex === 0
                         ? 'bg-primary text-white'
-                        : 'bg-muted-light text-muted hover:bg-border'
+                        : 'bg-border text-slate-300 hover:bg-slate-600'
                     }`}
                   >
                     Front
@@ -238,7 +238,7 @@ export default function CollectionCardDetailPage() {
                     className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors ${
                       imageIndex === 1
                         ? 'bg-primary text-white'
-                        : 'bg-muted-light text-muted hover:bg-border'
+                        : 'bg-border text-slate-300 hover:bg-slate-600'
                     }`}
                   >
                     Back
@@ -261,7 +261,7 @@ export default function CollectionCardDetailPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold leading-tight">{card.playerName}</h1>
             {card.mintId && (
-              <span className="text-[10px] font-bold text-primary bg-primary-light px-2 py-0.5 rounded-full shrink-0">
+              <span className="text-[10px] font-bold text-white bg-primary px-2 py-0.5 rounded-full shrink-0">
                 {formatMintId(card.mintId)}
               </span>
             )}
@@ -271,25 +271,25 @@ export default function CollectionCardDetailPage() {
           )}
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             {card.sport && card.sport !== 'unknown' && (
-              <span className="text-[10px] bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+              <span className="text-[10px] bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
                 {card.sport}
               </span>
             )}
             {card.manufacturer && card.manufacturer !== 'unknown' && (
-              <span className="text-[10px] bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+              <span className="text-[10px] bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
                 {card.manufacturer}
               </span>
             )}
             {/* Scan type badge */}
             {isSingleScan ? (
-              <span className="text-[10px] font-bold text-primary bg-primary-light px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-[10px] font-bold text-white bg-primary px-2 py-0.5 rounded-full flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
                 Deep Evaluation
               </span>
             ) : (
-              <span className="text-[10px] font-bold text-muted bg-muted-light px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-[10px] font-bold text-slate-300 bg-border px-2 py-0.5 rounded-full flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />

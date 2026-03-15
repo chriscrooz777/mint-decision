@@ -41,7 +41,7 @@ export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveT
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-base truncate">{card.playerName}</h3>
               {card.mintId && (
-                <span className="text-[10px] font-bold text-primary bg-primary-light px-1.5 py-0.5 rounded-full shrink-0">
+                <span className="text-[10px] font-bold text-white bg-primary px-1.5 py-0.5 rounded-full shrink-0">
                   {formatMintId(card.mintId)}
                 </span>
               )}
@@ -58,12 +58,12 @@ export default function CardResultCard({ card, imageDataUrl, gridLayout, onSaveT
           {/* Details */}
           <div className="flex items-center gap-2 flex-wrap">
             {card.sport && card.sport !== 'unknown' && (
-              <span className="text-xs bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
                 {card.sport}
               </span>
             )}
             {card.manufacturer && card.manufacturer !== 'unknown' && (
-              <span className="text-xs bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
                 {card.manufacturer}
               </span>
             )}

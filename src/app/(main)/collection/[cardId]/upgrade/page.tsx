@@ -191,12 +191,12 @@ export default function UpgradeCardPage() {
         )}
         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
           {card.sport && card.sport !== 'unknown' && (
-            <span className="text-[10px] bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
               {card.sport}
             </span>
           )}
           {card.manufacturer && card.manufacturer !== 'unknown' && (
-            <span className="text-[10px] bg-muted-light text-muted font-semibold px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-border text-slate-300 font-semibold px-2 py-0.5 rounded-full">
               {card.manufacturer}
             </span>
           )}

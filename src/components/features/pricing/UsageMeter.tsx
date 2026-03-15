@@ -29,7 +29,7 @@ export default function UsageMeter({ tier, scansUsed, scansLimit }: UsageMeterPr
           {formatNumber(scansUsed)} / {formatNumber(scansLimit)}
         </span>
       </div>
-      <div className="h-2.5 bg-muted-light rounded-full overflow-hidden">
+      <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${barColor}`}
           style={{ width: `${Math.min(100, percentage)}%` }}

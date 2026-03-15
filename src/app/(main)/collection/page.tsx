@@ -171,7 +171,7 @@ export default function CollectionPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 sortBy === opt.value
                   ? 'bg-primary text-white'
-                  : 'bg-muted-light text-muted hover:bg-border'
+                  : 'bg-border text-slate-300 hover:bg-slate-600'
               }`}
             >
               {opt.label}
