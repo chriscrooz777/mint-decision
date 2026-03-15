@@ -6,7 +6,7 @@ import { singleCardSchema } from '@/lib/openai/schemas';
 import { AISingleScanResponse } from '@/types/scan';
 import { getCurrentMonthYear } from '@/lib/utils/format';
 import { cleanupFreeResults } from '@/lib/utils/cleanupFreeResults';
-import { uploadCardImageServer, uploadCardBackImageServer } from '@/lib/supabase/server-storage';
+import { uploadCardDeepFrontImageServer, uploadCardDeepBackImageServer } from '@/lib/supabase/server-storage';
 import sharp from 'sharp';
 
 export const maxDuration = 60;
@@ -239,17 +239,27 @@ export async function POST(request: NextRequest) {
       await cleanupFreeResults(supabase, user.id);
     }
 
-    // Upload images to Supabase Storage (server-side)
+    // Upload images to Supabase Storage (server-side).
+    // Uses _deep / _deep_back paths so the URL differs from the original
+    // quick-scan crop, avoiding any CDN cache collision.
     try {
       const frontBuffer = Buffer.from(imageFront, 'base64');
-      const frontJpeg = await sharp(frontBuffer).jpeg({ quality: 85 }).toBuffer();
-      const frontPath = await uploadCardImageServer(supabase, frontJpeg, user.id, cardId);
+      const frontJpeg = await sharp(frontBuffer)
+        .rotate() // apply EXIF orientation from phone cameras
+        .resize({ width: 2048, height: 2048, fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+      const frontPath = await uploadCardDeepFrontImageServer(supabase, frontJpeg, user.id, cardId);
 
       let backPath: string | null = null;
       if (imageBack) {
         const backBuffer = Buffer.from(imageBack, 'base64');
-        const backJpeg = await sharp(backBuffer).jpeg({ quality: 85 }).toBuffer();
-        backPath = await uploadCardBackImageServer(supabase, backJpeg, user.id, cardId);
+        const backJpeg = await sharp(backBuffer)
+          .rotate()
+          .resize({ width: 2048, height: 2048, fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toBuffer();
+        backPath = await uploadCardDeepBackImageServer(supabase, backJpeg, user.id, cardId);
       }
 
       if (frontPath || backPath) {
