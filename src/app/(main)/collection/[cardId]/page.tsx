@@ -179,7 +179,9 @@ export default function CollectionCardDetailPage() {
   return (
     <div className="space-y-5">
       {/* ───────────── ZONE 1: Hero ───────────── */}
-      <div className="w-screen ml-[calc(50%-50vw)] -mt-4 px-4 pb-6 bg-gradient-to-b from-primary/5 via-primary/[0.02] to-transparent">
+      {/* Outer div is full-width for the gradient; inner div mirrors AppShell's max-w-lg mx-auto px-4 so content stays aligned with Zones 2–4 */}
+      <div className="w-screen ml-[calc(50%-50vw)] -mt-4 bg-gradient-to-b from-primary/5 via-primary/[0.02] to-transparent">
+      <div className="max-w-lg mx-auto px-4 pb-6">
         {/* Back nav */}
         <Link
           href="/collection"
@@ -299,7 +301,8 @@ export default function CollectionCardDetailPage() {
             )}
           </div>
         </div>
-      </div>
+      </div>{/* end inner max-w-lg */}
+      </div>{/* end full-width gradient */}
 
       {/* ───────────── ZONE 2: Grade Report ───────────── */}
       {isSingleScan ? (
