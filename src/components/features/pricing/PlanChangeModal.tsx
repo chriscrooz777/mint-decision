@@ -33,7 +33,7 @@ export default function PlanChangeModal({
   currentTier,
   onComplete,
 }: PlanChangeModalProps) {
-  const [state, setState] = useState<ModalState>('processing');
+  const [state, setState] = useState<ModalState>('confirm');
   const [errorMsg, setErrorMsg] = useState('');
 
   const direction = targetTier ? getDirection(currentTier, targetTier) : 'upgrade';
