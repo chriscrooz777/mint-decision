@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { APP_NAME } from '@/lib/constants';
+import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
   {
@@ -101,6 +102,7 @@ interface NavMenuProps {
 
 export default function NavMenu({ isOpen, onClose }: NavMenuProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Lock body scroll while open
   useEffect(() => {
@@ -123,6 +125,14 @@ export default function NavMenu({ isOpen, onClose }: NavMenuProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  const handleSignOut = useCallback(async () => {
+    onClose();
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/');
+    router.refresh();
+  }, [onClose, router]);
+
   return (
     <>
       {/* Backdrop */}
@@ -141,18 +151,17 @@ export default function NavMenu({ isOpen, onClose }: NavMenuProps) {
         aria-label="Navigation menu"
         className={[
           'fixed z-50',
-          // Shared
           'bg-[#070d1a] border-border',
           'transition-transform duration-300 ease-out',
-          // Mobile: bottom sheet
+          // Mobile: bottom sheet — slides up from bottom
           'bottom-0 left-0 right-0 rounded-t-3xl border-t',
-          // Desktop: right drawer
+          // Desktop: right drawer — slides in from right; reset y so only x animates
           'md:bottom-auto md:top-0 md:left-auto md:right-0 md:h-full md:w-80',
           'md:rounded-none md:rounded-l-2xl md:border-t-0 md:border-l',
-          // Open / closed states
+          // Open/closed: mobile uses translateY, desktop uses translateX (y reset to 0)
           isOpen
-            ? 'translate-y-0 md:translate-x-0'
-            : 'translate-y-full md:translate-x-full',
+            ? 'translate-y-0 md:translate-y-0 md:translate-x-0'
+            : 'translate-y-full md:translate-y-0 md:translate-x-full',
         ].join(' ')}
       >
         {/* Mobile drag handle */}
@@ -212,11 +221,7 @@ export default function NavMenu({ isOpen, onClose }: NavMenuProps) {
 
                 {/* Label + description */}
                 <div className="flex-1 min-w-0">
-                  <div
-                    className={`text-sm font-semibold leading-none mb-0.5 ${
-                      isActive ? 'text-foreground' : 'text-foreground'
-                    }`}
-                  >
+                  <div className="text-sm font-semibold leading-none mb-0.5 text-foreground">
                     {item.label}
                   </div>
                   <div className="text-xs text-muted leading-none">
@@ -233,11 +238,31 @@ export default function NavMenu({ isOpen, onClose }: NavMenuProps) {
           })}
         </nav>
 
-        {/* Footer tagline */}
-        <div className="px-5 pt-2 pb-8 md:pb-6 border-t border-border mt-2">
-          <p className="text-xs text-muted text-center mt-4">
-            Know your cards.
-          </p>
+        {/* Sign Out */}
+        <div className="px-3 pb-8 md:pb-6 border-t border-border mt-2 pt-3">
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-3.5 w-full px-3 py-3 rounded-xl text-muted hover:bg-white/5 hover:text-red-400 transition-colors group"
+          >
+            <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-white/5 group-hover:bg-red-950/30 flex items-center justify-center transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold leading-none mb-0.5 text-foreground group-hover:text-red-400 transition-colors">
+                Sign Out
+              </div>
+              <div className="text-xs text-muted leading-none">
+                Sign out of your account
+              </div>
+            </div>
+          </button>
         </div>
       </div>
     </>

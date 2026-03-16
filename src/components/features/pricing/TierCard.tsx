@@ -80,7 +80,7 @@ export default function TierCard({ config, currentTier, onSelect }: TierCardProp
           className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors ${
             isPopular
               ? 'bg-primary text-white hover:bg-primary-dark'
-              : 'bg-border text-foreground hover:bg-slate-600'
+              : 'bg-slate-600 text-white hover:bg-slate-500'
           }`}
         >
           {config.price === 0 ? 'Downgrade' : 'Upgrade'}

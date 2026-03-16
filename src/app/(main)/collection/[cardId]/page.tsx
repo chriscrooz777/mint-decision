@@ -179,7 +179,7 @@ export default function CollectionCardDetailPage() {
   return (
     <div className="space-y-5">
       {/* ───────────── ZONE 1: Hero ───────────── */}
-      <div className="-mx-4 -mt-4 px-4 pb-6 bg-gradient-to-b from-primary/5 via-primary/[0.02] to-transparent">
+      <div className="w-screen ml-[calc(50%-50vw)] -mt-4 px-4 pb-6 bg-gradient-to-b from-primary/5 via-primary/[0.02] to-transparent">
         {/* Back nav */}
         <Link
           href="/collection"
