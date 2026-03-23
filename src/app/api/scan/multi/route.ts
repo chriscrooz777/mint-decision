@@ -213,31 +213,51 @@ export async function POST(request: NextRequest) {
           }
         }
       } else {
-        // Multi-card — crop each card from its grid cell
+        // Multi-card — crop each card using AI-provided bounding boxes when valid,
+        // falling back to equal grid cell division with 2% inward padding.
         for (const card of aiResult.cards) {
           const savedCard = savedCards?.find((sc) => sc.card_index === card.card_index);
           if (!savedCard) continue;
 
-          const cellWidth = imgWidth / aiResult.grid_cols;
-          const cellHeight = imgHeight / aiResult.grid_rows;
-          const baseX = card.grid_col * cellWidth;
-          const baseY = card.grid_row * cellHeight;
+          let left: number, top: number, width: number, height: number;
 
-          // 5% inward padding (matches client-side CroppedCardThumbnail)
-          const padX = cellWidth * 0.05;
-          const padY = cellHeight * 0.05;
+          const bboxValid =
+            typeof card.bbox_x_min === 'number' &&
+            typeof card.bbox_y_min === 'number' &&
+            typeof card.bbox_x_max === 'number' &&
+            typeof card.bbox_y_max === 'number' &&
+            card.bbox_x_max > card.bbox_x_min &&
+            card.bbox_y_max > card.bbox_y_min;
 
-          const left = Math.max(0, Math.round(baseX + padX));
-          const top = Math.max(0, Math.round(baseY + padY));
-          const width = Math.min(Math.round(cellWidth - padX * 2), imgWidth - left);
-          const height = Math.min(Math.round(cellHeight - padY * 2), imgHeight - top);
+          if (bboxValid) {
+            // Use AI bounding box — add 1% padding to avoid clipping card edges
+            const pad = 0.01;
+            const x1 = Math.max(0, card.bbox_x_min - pad) * imgWidth;
+            const y1 = Math.max(0, card.bbox_y_min - pad) * imgHeight;
+            const x2 = Math.min(1, card.bbox_x_max + pad) * imgWidth;
+            const y2 = Math.min(1, card.bbox_y_max + pad) * imgHeight;
+            left = Math.round(x1);
+            top = Math.round(y1);
+            width = Math.min(Math.round(x2 - x1), imgWidth - left);
+            height = Math.min(Math.round(y2 - y1), imgHeight - top);
+          } else {
+            // Fallback: equal grid cell division with 2% inward padding
+            const cellWidth = imgWidth / aiResult.grid_cols;
+            const cellHeight = imgHeight / aiResult.grid_rows;
+            const padX = cellWidth * 0.02;
+            const padY = cellHeight * 0.02;
+            left = Math.max(0, Math.round(card.grid_col * cellWidth + padX));
+            top = Math.max(0, Math.round(card.grid_row * cellHeight + padY));
+            width = Math.min(Math.round(cellWidth - padX * 2), imgWidth - left);
+            height = Math.min(Math.round(cellHeight - padY * 2), imgHeight - top);
+          }
 
           if (width <= 0 || height <= 0) continue;
 
           try {
             const croppedBuffer = await sharp(rotatedImageBuffer)
               .extract({ left, top, width, height })
-              .resize(400, 400, { fit: 'inside' })
+              .resize(600, 600, { fit: 'inside' })
               .jpeg({ quality: 85 })
               .toBuffer();
 

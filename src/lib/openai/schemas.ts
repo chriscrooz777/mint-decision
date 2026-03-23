@@ -28,6 +28,10 @@ export const multiCardSchema: ResponseFormatJSONSchema = {
               'card_index',
               'grid_row',
               'grid_col',
+              'bbox_x_min',
+              'bbox_y_min',
+              'bbox_x_max',
+              'bbox_y_max',
               'player_name',
               'card_year',
               'card_set',
@@ -56,6 +60,26 @@ export const multiCardSchema: ResponseFormatJSONSchema = {
                 type: 'integer',
                 description:
                   'Column position of this card in the grid, 0-indexed from left',
+              },
+              bbox_x_min: {
+                type: 'number',
+                description:
+                  'Left edge of this card as a fraction of total image width (0.0 = far left, 1.0 = far right). Be tight to the card border.',
+              },
+              bbox_y_min: {
+                type: 'number',
+                description:
+                  'Top edge of this card as a fraction of total image height (0.0 = top, 1.0 = bottom). Be tight to the card border.',
+              },
+              bbox_x_max: {
+                type: 'number',
+                description:
+                  'Right edge of this card as a fraction of total image width. Be tight to the card border.',
+              },
+              bbox_y_max: {
+                type: 'number',
+                description:
+                  'Bottom edge of this card as a fraction of total image height. Be tight to the card border.',
               },
               player_name: { type: 'string' },
               card_year: {
