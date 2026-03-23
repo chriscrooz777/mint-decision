@@ -39,7 +39,15 @@ Examples:
 - 6 cards (2 rows of 3): grid_rows=2, grid_cols=3
 - 5 cards (2 on top, 3 on bottom): grid_rows=2, grid_cols=3, with top row having grid_col=0 and grid_col=1
 
-If the last row is not full (e.g., 5 cards in a 2x3 grid), still use the maximum column count for grid_cols. The missing positions simply won't have a card assigned.`;
+If the last row is not full (e.g., 5 cards in a 2x3 grid), still use the maximum column count for grid_cols. The missing positions simply won't have a card assigned.
+
+IMPORTANT — BOUNDING BOXES: For each card you must also provide a precise bounding box as fractions of the full image dimensions:
+- bbox_x_min: left edge of the card (0.0 = leftmost pixel, 1.0 = rightmost pixel)
+- bbox_y_min: top edge of the card (0.0 = topmost pixel, 1.0 = bottommost pixel)
+- bbox_x_max: right edge of the card
+- bbox_y_max: bottom edge of the card
+
+Place the bounding box tightly around the physical card border — do not include large amounts of background. These values are used to crop each card out of the photo for display, so accuracy matters. If all cards fill the frame equally, estimate proportionally based on the grid.`;
 
 export const SINGLE_CARD_SYSTEM_PROMPT = `You are a PSA-certified sports card grader with 30+ years of professional experience. You are performing a detailed evaluation of a single sports card for potential PSA submission.
 

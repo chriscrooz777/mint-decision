@@ -96,6 +96,11 @@ export interface AIMultiCardResult {
   card_index: number;
   grid_row: number;
   grid_col: number;
+  /** Bounding box as fractions of the full image (0.0–1.0). Used for server-side crop. */
+  bbox_x_min: number;
+  bbox_y_min: number;
+  bbox_x_max: number;
+  bbox_y_max: number;
   player_name: string;
   card_year: string;
   card_set: string;
