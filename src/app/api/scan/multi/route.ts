@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request
     const body = await request.json();
-    const { image, mimeType } = body;
+    const { image, mimeType, imageBack, mimeTypeBack } = body;
 
     if (!image || !mimeType) {
       return NextResponse.json(
@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const hasBackImage = !!(imageBack && mimeTypeBack);
 
     // Check scan usage
     const monthYear = getCurrentMonthYear();
@@ -81,6 +83,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Build vision content — always include front, optionally include back
+    type ImageUrlContent = { type: 'image_url'; image_url: { url: string; detail: 'high' } };
+    const visionContent: ImageUrlContent[] = [
+      {
+        type: 'image_url',
+        image_url: {
+          url: `data:${mimeType};base64,${image}`,
+          detail: 'high',
+        },
+      },
+    ];
+
+    if (hasBackImage) {
+      visionContent.push({
+        type: 'image_url',
+        image_url: {
+          url: `data:${mimeTypeBack};base64,${imageBack}`,
+          detail: 'high',
+        },
+      });
+    }
+
     // Call OpenAI Vision API
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -88,15 +112,7 @@ export async function POST(request: NextRequest) {
         { role: 'system', content: MULTI_CARD_SYSTEM_PROMPT },
         {
           role: 'user',
-          content: [
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:${mimeType};base64,${image}`,
-                detail: 'high',
-              },
-            },
-          ],
+          content: visionContent,
         },
       ],
       response_format: multiCardSchema,

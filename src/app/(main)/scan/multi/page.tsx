@@ -11,6 +11,9 @@ import { useScanStore } from '@/stores/scanStore';
 export default function MultiScanPage() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageMimeType, setImageMimeType] = useState<string | null>(null);
+  const [showBackUploader, setShowBackUploader] = useState(false);
+  const [backBase64, setBackBase64] = useState<string | null>(null);
+  const [backMimeType, setBackMimeType] = useState<string | null>(null);
   const [savedCards, setSavedCards] = useState<Set<string>>(new Set());
   const [tier, setTier] = useState<string>('free');
   const { isScanning, multiResults, gridLayout, originalImageDataUrl, error, startScan, setMultiResults, setScanError, reset } =
@@ -105,6 +108,9 @@ export default function MultiScanPage() {
         body: JSON.stringify({
           image: imageBase64,
           mimeType: imageMimeType,
+          ...(showBackUploader && backBase64 && backMimeType
+            ? { imageBack: backBase64, mimeTypeBack: backMimeType }
+            : {}),
         }),
       });
 
@@ -126,6 +132,9 @@ export default function MultiScanPage() {
     reset();
     setImageBase64(null);
     setImageMimeType(null);
+    setShowBackUploader(false);
+    setBackBase64(null);
+    setBackMimeType(null);
   };
 
   // Loading state
@@ -173,7 +182,7 @@ export default function MultiScanPage() {
       </div>
 
       <ImageUploader
-        label="Photograph your cards"
+        label="Photograph your cards (fronts)"
         hint="Lay cards flat with good lighting. Supports 1-9 cards per photo."
         onImageReady={handleImageReady}
         onClear={() => {
@@ -181,6 +190,56 @@ export default function MultiScanPage() {
           setImageMimeType(null);
         }}
       />
+
+      {/* Back image toggle */}
+      <button
+        onClick={() => {
+          setShowBackUploader((prev) => {
+            if (prev) {
+              setBackBase64(null);
+              setBackMimeType(null);
+            }
+            return !prev;
+          });
+        }}
+        className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors w-full"
+      >
+        <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${showBackUploader ? 'bg-primary border-primary' : 'border-border'}`}>
+          {showBackUploader ? (
+            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : null}
+        </div>
+        <span>Add back images <span className="text-muted/70">(optional — improves accuracy)</span></span>
+      </button>
+
+      {/* Back image uploader */}
+      {showBackUploader && (
+        <div className="space-y-2">
+          <ImageUploader
+            label="Photograph your cards (backs)"
+            hint="Same layout as the fronts — same rows and columns."
+            optional
+            onImageReady={(b64, mime) => {
+              setBackBase64(b64);
+              setBackMimeType(mime);
+            }}
+            onClear={() => {
+              setBackBase64(null);
+              setBackMimeType(null);
+            }}
+          />
+          <div className="flex items-start gap-2 bg-amber-950/30 border border-amber-800/40 rounded-xl px-3 py-2.5">
+            <svg className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-xs text-amber-300 leading-relaxed">
+              Place the backs in the <strong>same order</strong> as the fronts. The card in the top-left of your backs photo should be the back of the top-left card in your fronts photo.
+            </p>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-950/30 border border-red-800/50 rounded-xl p-3">
