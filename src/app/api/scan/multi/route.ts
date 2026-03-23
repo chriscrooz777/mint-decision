@@ -297,9 +297,12 @@ export async function POST(request: NextRequest) {
         sport: card.sport,
         manufacturer: card.manufacturer,
         conditionSummary: card.condition_summary,
+        isRookieCard: card.is_rookie_card,
+        cardType: card.card_type,
         rawPriceLow: card.raw_price_low,
         rawPriceHigh: card.raw_price_high,
         psaRecommendation: card.psa_recommendation,
+        psaRecommendationReason: card.psa_recommendation_reason,
         confidence: card.confidence,
         gridPosition: {
           gridRow: card.grid_row,

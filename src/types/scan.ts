@@ -1,6 +1,7 @@
 export type Sport = 'MLB' | 'NBA' | 'NFL' | 'NHL' | 'golf' | 'pokemon' | 'soccer' | 'other' | 'unknown';
 export type PSARecommendation = 'yes' | 'no' | 'maybe';
 export type Confidence = 'high' | 'medium' | 'low';
+export type CardType = 'base' | 'rookie' | 'insert' | 'parallel' | 'short_print' | 'vintage';
 export type ScanType = 'multi' | 'single';
 export type ScanStatus = 'processing' | 'completed' | 'failed';
 
@@ -25,6 +26,8 @@ export interface CardResult {
   cardNumber: string;
   sport: Sport;
   manufacturer: string;
+  isRookieCard?: boolean;
+  cardType?: CardType;
   conditionSummary: string;
   rawPriceLow: number;
   rawPriceHigh: number;
@@ -107,10 +110,13 @@ export interface AIMultiCardResult {
   card_number: string;
   sport: Sport;
   manufacturer: string;
+  is_rookie_card: boolean;
+  card_type: CardType;
   condition_summary: string;
   raw_price_low: number;
   raw_price_high: number;
   psa_recommendation: PSARecommendation;
+  psa_recommendation_reason: string;
   confidence: Confidence;
 }
 

@@ -38,10 +38,13 @@ export const multiCardSchema: ResponseFormatJSONSchema = {
               'card_number',
               'sport',
               'manufacturer',
+              'is_rookie_card',
+              'card_type',
               'condition_summary',
               'raw_price_low',
               'raw_price_high',
               'psa_recommendation',
+              'psa_recommendation_reason',
               'confidence',
             ],
             additionalProperties: false,
@@ -111,6 +114,15 @@ export const multiCardSchema: ResponseFormatJSONSchema = {
                 type: 'string',
                 description: "e.g. 'Topps', 'Fleer', 'Upper Deck'",
               },
+              is_rookie_card: {
+                type: 'boolean',
+                description: "True if this is the player's official rookie card (first licensed card in debut season)",
+              },
+              card_type: {
+                type: 'string',
+                enum: ['base', 'rookie', 'insert', 'parallel', 'short_print', 'vintage'],
+                description: 'Primary classification of this card',
+              },
               condition_summary: {
                 type: 'string',
                 description: 'Brief condition note, 1-2 sentences',
@@ -126,6 +138,10 @@ export const multiCardSchema: ResponseFormatJSONSchema = {
               psa_recommendation: {
                 type: 'string',
                 enum: ['yes', 'no', 'maybe'],
+              },
+              psa_recommendation_reason: {
+                type: 'string',
+                description: '1-2 sentence explanation of why this PSA recommendation was given, referencing player tier, era, condition, and grading cost vs. value',
               },
               confidence: {
                 type: 'string',
