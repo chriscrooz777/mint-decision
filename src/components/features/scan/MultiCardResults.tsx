@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { CardResult, GridLayout } from '@/types/scan';
 import CardResultCard from './CardResultCard';
-import ScanDrawer from './ScanDrawer';
 import { DISCLAIMER_TEXT } from '@/lib/constants';
 
 interface MultiCardResultsProps {
@@ -14,13 +13,13 @@ interface MultiCardResultsProps {
   onSaveToCollection?: (cardId: string) => void;
   onUnsaveFromCollection?: (cardId: string) => void;
   onSaveAll?: () => Promise<void>;
+  onNewScan?: () => void;
   savedCards?: Set<string>;
   isFree?: boolean;
 }
 
-export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSaveToCollection, onUnsaveFromCollection, onSaveAll, savedCards, isFree }: MultiCardResultsProps) {
+export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSaveToCollection, onUnsaveFromCollection, onSaveAll, onNewScan, savedCards, isFree }: MultiCardResultsProps) {
   const [isSavingAll, setIsSavingAll] = useState(false);
-  const [isScanDrawerOpen, setIsScanDrawerOpen] = useState(false);
   const yesCount = cards.filter((c) => c.psaRecommendation === 'yes').length;
   const maybeCount = cards.filter((c) => c.psaRecommendation === 'maybe').length;
   const allSaved = savedCards ? cards.every((c) => savedCards.has(c.id)) : false;
@@ -168,7 +167,7 @@ export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSa
       {/* Row 2: New Scan (left/secondary) + Done (right/primary) */}
       <div className="flex gap-3">
         <button
-          onClick={() => setIsScanDrawerOpen(true)}
+          onClick={onNewScan}
           className="flex-1 flex items-center justify-center gap-2 font-semibold py-3.5 rounded-xl text-sm border border-border bg-card hover:bg-border transition-colors text-foreground"
         >
           <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +188,6 @@ export default function MultiCardResults({ cards, imageDataUrl, gridLayout, onSa
         </Link>
       </div>
 
-      <ScanDrawer isOpen={isScanDrawerOpen} onClose={() => setIsScanDrawerOpen(false)} />
 
       {/* Disclaimer */}
       <div className="bg-amber-950/30 border border-amber-800/50 rounded-xl p-3">

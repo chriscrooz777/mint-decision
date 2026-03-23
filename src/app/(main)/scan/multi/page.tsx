@@ -145,6 +145,7 @@ export default function MultiScanPage() {
           onSaveToCollection={isFree ? undefined : handleSaveToCollection}
           onUnsaveFromCollection={isFree ? undefined : handleUnsaveFromCollection}
           onSaveAll={isFree ? undefined : handleSaveAll}
+          onNewScan={handleNewScan}
           savedCards={savedCards}
           isFree={isFree}
         />
