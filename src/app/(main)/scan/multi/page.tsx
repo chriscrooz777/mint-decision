@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import ImageUploader from '@/components/features/scan/ImageUploader';
 import ScanLoadingState from '@/components/features/scan/ScanLoadingState';
 import MultiCardResults from '@/components/features/scan/MultiCardResults';
+import ScanDrawer from '@/components/features/scan/ScanDrawer';
 import Button from '@/components/ui/Button';
 import { useScanStore } from '@/stores/scanStore';
 
@@ -14,6 +15,7 @@ export default function MultiScanPage() {
   const [showBackUploader, setShowBackUploader] = useState(false);
   const [backBase64, setBackBase64] = useState<string | null>(null);
   const [backMimeType, setBackMimeType] = useState<string | null>(null);
+  const [isScanDrawerOpen, setIsScanDrawerOpen] = useState(false);
   const [savedCards, setSavedCards] = useState<Set<string>>(new Set());
   const [tier, setTier] = useState<string>('free');
   const { isScanning, multiResults, gridLayout, originalImageDataUrl, error, startScan, setMultiResults, setScanError, reset } =
@@ -129,12 +131,18 @@ export default function MultiScanPage() {
   };
 
   const handleNewScan = () => {
+    setIsScanDrawerOpen(true);
+  };
+
+  const handleQuickScanFromDrawer = () => {
+    setIsScanDrawerOpen(false);
     reset();
     setImageBase64(null);
     setImageMimeType(null);
     setShowBackUploader(false);
     setBackBase64(null);
     setBackMimeType(null);
+    setSavedCards(new Set());
   };
 
   // Loading state
@@ -157,6 +165,11 @@ export default function MultiScanPage() {
           onNewScan={handleNewScan}
           savedCards={savedCards}
           isFree={isFree}
+        />
+        <ScanDrawer
+          isOpen={isScanDrawerOpen}
+          onClose={() => setIsScanDrawerOpen(false)}
+          onQuickScan={handleQuickScanFromDrawer}
         />
       </div>
     );
