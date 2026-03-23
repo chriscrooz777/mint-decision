@@ -6,9 +6,11 @@ import Link from 'next/link';
 interface ScanDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Override Quick Scan navigation with a callback — use when already on /scan/multi */
+  onQuickScan?: () => void;
 }
 
-export default function ScanDrawer({ isOpen, onClose }: ScanDrawerProps) {
+export default function ScanDrawer({ isOpen, onClose, onQuickScan }: ScanDrawerProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -61,6 +63,26 @@ export default function ScanDrawer({ isOpen, onClose }: ScanDrawerProps) {
           {/* Options */}
           <div className="px-5 pb-6 space-y-3">
             {/* Quick Scan */}
+            {onQuickScan ? (
+              <button
+                onClick={onQuickScan}
+                className="group w-full text-left flex items-start gap-4 bg-card rounded-2xl border-2 border-border p-4 hover:border-primary transition-colors"
+              >
+                <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors">
+                  <svg className="w-6 h-6 text-primary group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold">Quick Scan</h3>
+                  <p className="text-sm text-muted mt-0.5">Scan up to 9 cards at once for fast identification and pricing.</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs bg-primary text-white font-semibold px-2.5 py-1 rounded-full">1-9 cards</span>
+                    <span className="text-xs bg-border text-slate-300 font-semibold px-2.5 py-1 rounded-full">Fast results</span>
+                  </div>
+                </div>
+              </button>
+            ) : (
             <Link
               href="/scan/multi"
               onClick={onClose}
@@ -96,6 +118,7 @@ export default function ScanDrawer({ isOpen, onClose }: ScanDrawerProps) {
                 </div>
               </div>
             </Link>
+            )}
 
             {/* Deep Evaluation */}
             <Link
