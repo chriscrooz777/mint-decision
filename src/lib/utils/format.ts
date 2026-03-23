@@ -1,9 +1,11 @@
 export function formatCurrency(amount: number): string {
+  // Whole-dollar amounts show no cents (e.g. $210); fractional amounts show 2 decimals (e.g. $4.50)
+  const isWhole = amount % 1 === 0;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: isWhole ? 0 : 2,
+    maximumFractionDigits: isWhole ? 0 : 2,
   }).format(amount);
 }
 
