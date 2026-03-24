@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { SUPPORTED_SPORTS } from '@/lib/constants';
 import { formatPriceRange, formatNumber, formatMintId, formatGradeRange } from '@/lib/utils/format';
@@ -9,6 +9,8 @@ import Link from 'next/link';
 import SwipeableCard from '@/components/features/collection/SwipeableCard';
 import { getCardImageUrl } from '@/lib/supabase/storage';
 import ScanDrawer from '@/components/features/scan/ScanDrawer';
+
+const PAGE_SIZE = 20;
 
 interface CollectionCardData {
   id: string;
@@ -29,8 +31,7 @@ interface CollectionCardData {
   created_at: string;
 }
 
-interface CollectionResponse {
-  cards: CollectionCardData[];
+interface CollectionMeta {
   total: number;
   tier: string;
   stats: {
@@ -42,74 +43,128 @@ interface CollectionResponse {
 
 export default function CollectionPage() {
   const router = useRouter();
-  const [data, setData] = useState<CollectionResponse | null>(null);
+  const [cards, setCards] = useState<CollectionCardData[]>([]);
+  const [meta, setMeta] = useState<CollectionMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sportFilter, setSportFilter] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [isScanDrawerOpen, setIsScanDrawerOpen] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const isFree = data?.tier === 'free';
-  const visibleCards = data?.cards ?? [];
+  const isFree = meta?.tier === 'free';
+  const hasMore = cards.length < (meta?.total ?? 0);
 
-  const fetchCollection = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (search) params.set('search', search);
-      if (sportFilter) params.set('sport', sportFilter);
-      params.set('sortBy', sortBy);
+  // Fetch page 1 whenever filters/sort change
+  useEffect(() => {
+    let cancelled = false;
 
-      const res = await fetch(`/api/collection?${params}`);
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to load collection');
+    const fetchInitial = async () => {
+      setIsLoading(true);
+      setCards([]);
+      setPage(1);
+      try {
+        const params = new URLSearchParams({ sortBy, page: '1', limit: String(PAGE_SIZE) });
+        if (search) params.set('search', search);
+        if (sportFilter) params.set('sport', sportFilter);
+
+        const res = await fetch(`/api/collection?${params}`);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to load collection');
+        }
+        const result = await res.json();
+        if (cancelled) return;
+        setCards(result.cards);
+        setMeta({ total: result.total, tier: result.tier, stats: result.stats });
+        setError(null);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load collection');
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-      const result = await res.json();
-      setData(result);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load collection');
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    fetchInitial();
+    return () => { cancelled = true; };
   }, [search, sportFilter, sortBy]);
 
+  // Load next page and append
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    const nextPage = page + 1;
+    setIsLoadingMore(true);
+    try {
+      const params = new URLSearchParams({ sortBy, page: String(nextPage), limit: String(PAGE_SIZE) });
+      if (search) params.set('search', search);
+      if (sportFilter) params.set('sport', sportFilter);
+
+      const res = await fetch(`/api/collection?${params}`);
+      if (!res.ok) throw new Error('Failed to load more');
+      const result = await res.json();
+      setCards((prev) => [...prev, ...result.cards]);
+      setPage(nextPage);
+    } catch {
+      // silently fail — user can scroll again to retry
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [page, search, sportFilter, sortBy, isLoadingMore, hasMore]);
+
+  // Intersection observer triggers loadMore when sentinel enters view
   useEffect(() => {
-    fetchCollection();
-  }, [fetchCollection]);
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMore(); },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   const handleDeleteCard = useCallback(async (cardId: string) => {
-    try {
-      const res = await fetch(`/api/collection/${cardId}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to delete card');
+    // Optimistic remove
+    setCards((prev) => {
+      const deleted = prev.find((c) => c.id === cardId);
+      if (deleted) {
+        setMeta((m) =>
+          m
+            ? {
+                ...m,
+                total: m.total - 1,
+                stats: {
+                  totalCards: m.stats.totalCards - 1,
+                  totalValueLow: m.stats.totalValueLow - (deleted.estimated_value_low || 0),
+                  totalValueHigh: m.stats.totalValueHigh - (deleted.estimated_value_high || 0),
+                },
+              }
+            : m
+        );
       }
-      // Optimistic removal from state
-      setData((prev) => {
-        if (!prev) return prev;
-        const filteredCards = prev.cards.filter((c) => c.id !== cardId);
-        const deletedCard = prev.cards.find((c) => c.id === cardId);
-        return {
-          ...prev,
-          cards: filteredCards,
-          total: prev.total - 1,
-          stats: {
-            totalCards: prev.stats.totalCards - 1,
-            totalValueLow: prev.stats.totalValueLow - (deletedCard?.estimated_value_low || 0),
-            totalValueHigh: prev.stats.totalValueHigh - (deletedCard?.estimated_value_high || 0),
-          },
-        };
-      });
+      return prev.filter((c) => c.id !== cardId);
+    });
+
+    try {
+      const res = await fetch(`/api/collection/${cardId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete card');
     } catch {
-      // Re-fetch to restore state on error
-      fetchCollection();
+      // Re-fetch page 1 to restore
+      const params = new URLSearchParams({ sortBy, page: '1', limit: String(PAGE_SIZE) });
+      if (search) params.set('search', search);
+      if (sportFilter) params.set('sport', sportFilter);
+      const res = await fetch(`/api/collection?${params}`);
+      if (res.ok) {
+        const result = await res.json();
+        setCards(result.cards);
+        setPage(1);
+        setMeta({ total: result.total, tier: result.tier, stats: result.stats });
+      }
     }
-  }, [fetchCollection]);
+  }, [search, sportFilter, sortBy]);
 
   return (
     <div className="space-y-4">
@@ -134,16 +189,16 @@ export default function CollectionPage() {
       <ScanDrawer isOpen={isScanDrawerOpen} onClose={() => setIsScanDrawerOpen(false)} />
 
       {/* Stats — paid users only */}
-      {!isFree && data?.stats && data.stats.totalCards > 0 && (
+      {!isFree && meta?.stats && meta.stats.totalCards > 0 && (
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-1 bg-card rounded-xl border border-border p-3 text-center">
             <p className="text-xs text-muted">Total Cards</p>
-            <p className="text-xl font-bold">{formatNumber(data.stats.totalCards)}</p>
+            <p className="text-xl font-bold">{formatNumber(meta.stats.totalCards)}</p>
           </div>
           <div className="col-span-2 bg-card rounded-xl border border-border p-3 text-center">
             <p className="text-xs text-muted">Est. Value</p>
             <p className="text-xl font-bold text-primary">
-              {formatPriceRange(data.stats.totalValueLow, data.stats.totalValueHigh)}
+              {formatPriceRange(meta.stats.totalValueLow, meta.stats.totalValueHigh)}
             </p>
           </div>
         </div>
@@ -212,7 +267,7 @@ export default function CollectionPage() {
         </div>
       )}
 
-      {/* Loading */}
+      {/* Initial loading skeleton */}
       {isLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -225,7 +280,7 @@ export default function CollectionPage() {
       )}
 
       {/* Empty state */}
-      {!isLoading && visibleCards.length === 0 && !error && (
+      {!isLoading && cards.length === 0 && !error && (
         <div className="text-center py-12">
           <div className="w-12 h-12 bg-muted-light rounded-xl flex items-center justify-center mx-auto mb-3">
             <svg className="w-6 h-6 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,26 +291,23 @@ export default function CollectionPage() {
           <p className="text-xs text-muted mb-4">
             Scan your cards and tap Save to build your collection.
           </p>
-          <Link
-            href="/scan"
-            className="text-sm text-primary font-semibold hover:underline"
-          >
+          <Link href="/scan" className="text-sm text-primary font-semibold hover:underline">
             Start Scanning →
           </Link>
         </div>
       )}
 
       {/* Hint */}
-      {!isLoading && visibleCards.length > 0 && (
+      {!isLoading && cards.length > 0 && (
         <p className="text-[10px] text-muted text-center">
           Tap a card for details · Swipe left to remove
         </p>
       )}
 
       {/* Card list */}
-      {!isLoading && visibleCards.length > 0 && (
+      {!isLoading && cards.length > 0 && (
         <div className="space-y-2">
-          {visibleCards.map((card) => (
+          {cards.map((card) => (
             <SwipeableCard
               key={card.id}
               cardId={card.id}
@@ -296,13 +348,11 @@ export default function CollectionPage() {
                   <p className="text-xs font-bold text-primary">
                     {formatPriceRange(card.estimated_value_low, card.estimated_value_high)}
                   </p>
-                  {/* Deep eval: show PSA grade in green lozenge */}
                   {card.estimated_psa_grade_low != null && card.estimated_psa_grade_high != null && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-900/30 text-green-400">
                       {formatGradeRange(card.estimated_psa_grade_low, card.estimated_psa_grade_high)}
                     </span>
                   )}
-                  {/* Multi scan: show PSA recommendation lozenge */}
                   {!card.estimated_psa_grade_low && card.psa_recommendation && (
                     <span
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
@@ -321,8 +371,7 @@ export default function CollectionPage() {
             </SwipeableCard>
           ))}
 
-          {/* Faded 6th card teaser (free tier only) */}
-          {/* Upgrade CTA (free tier only) */}
+          {/* Free tier upgrade CTA */}
           {isFree && (
             <div className="bg-gradient-to-r from-primary to-blue-600 rounded-2xl p-5 text-center text-white shadow-md shadow-primary/10">
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -342,11 +391,34 @@ export default function CollectionPage() {
               </Link>
             </div>
           )}
+
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} className="h-1" />
+
+          {/* Loading more indicator */}
+          {isLoadingMore && (
+            <div className="flex justify-center py-4">
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 150}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* End of list */}
+          {!hasMore && !isLoadingMore && cards.length >= PAGE_SIZE && (
+            <p className="text-[10px] text-muted text-center py-3">All cards loaded</p>
+          )}
         </div>
       )}
 
-      {/* Upgrade CTA for empty state free users */}
-      {!isLoading && isFree && visibleCards.length === 0 && !error && (
+      {/* Upgrade CTA for empty-state free users */}
+      {!isLoading && isFree && cards.length === 0 && !error && (
         <div className="bg-gradient-to-r from-primary to-blue-600 rounded-2xl p-5 text-center text-white shadow-md shadow-primary/10">
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
