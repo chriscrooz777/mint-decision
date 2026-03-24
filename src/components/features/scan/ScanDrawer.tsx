@@ -42,14 +42,15 @@ export default function ScanDrawer({ isOpen, onClose, onQuickScan }: ScanDrawerP
         onClick={onClose}
       />
 
-      {/* Drawer */}
-      <div
-        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-out ${
-          isOpen ? 'translate-y-0' : 'translate-y-full'
-        }`}
-      >
-        <div className="bg-card rounded-t-2xl shadow-xl max-w-lg mx-auto">
-          {/* Handle */}
+      {/* Drawer — overflow-hidden clips the shadow so it can't peek when closed */}
+      <div className="fixed inset-x-0 bottom-0 z-50 overflow-hidden">
+        <div
+          className={`transition-transform duration-300 ease-out ${
+            isOpen ? 'translate-y-0' : 'translate-y-full'
+          }`}
+        >
+          <div className="bg-card rounded-t-2xl shadow-xl max-w-lg mx-auto">
+            {/* Handle */}
           <div className="flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 bg-border rounded-full" />
           </div>
@@ -158,8 +159,9 @@ export default function ScanDrawer({ isOpen, onClose, onQuickScan }: ScanDrawerP
             </Link>
           </div>
 
-          {/* Safe area padding */}
-          <div className="pb-safe" />
+          {/* Safe area — fills home-indicator gap on iOS; 8px fallback on desktop */}
+          <div style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }} />
+        </div>
         </div>
       </div>
     </>
