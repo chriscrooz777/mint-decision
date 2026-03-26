@@ -43,7 +43,7 @@ export default function ScanDrawer({ isOpen, onClose, onQuickScan }: ScanDrawerP
       />
 
       {/* Drawer — overflow-hidden clips the shadow so it can't peek when closed */}
-      <div className="fixed inset-x-0 bottom-0 z-50 overflow-hidden">
+      <div className={`fixed inset-x-0 bottom-0 z-50 overflow-hidden ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
         <div
           className={`transition-transform duration-300 ease-out ${
             isOpen ? 'translate-y-0' : 'translate-y-full'

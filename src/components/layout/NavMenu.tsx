@@ -160,8 +160,8 @@ export default function NavMenu({ isOpen, onClose }: NavMenuProps) {
           'md:rounded-none md:rounded-l-2xl md:border-t-0 md:border-l',
           // Open/closed: mobile uses translateY, desktop uses translateX (y reset to 0)
           isOpen
-            ? 'translate-y-0 md:translate-y-0 md:translate-x-0'
-            : 'translate-y-full md:translate-y-0 md:translate-x-full',
+            ? 'translate-y-0 md:translate-y-0 md:translate-x-0 pointer-events-auto'
+            : 'translate-y-full md:translate-y-0 md:translate-x-full pointer-events-none',
         ].join(' ')}
       >
         {/* Mobile drag handle */}
